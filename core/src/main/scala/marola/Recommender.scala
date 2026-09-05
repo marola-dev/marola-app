@@ -1,11 +1,14 @@
 package marola
 
+import java.time.{LocalDate, ZoneId}
+
 import kyo.*
+
 import marola.beaches.BeachFinder
-import marola.conditions.OpenMeteoClient
+import marola.conditions.{OpenMeteoClient, Tides}
 import marola.model.*
 import marola.scoring.Swimability
-import java.time.{LocalDate, ZoneId}
+import marola.water.{WaterQuality, WaterQualityClient, WaterQualityMatcher}
 
 /**
  * Answers "what's the best hour tomorrow to swim nearby?": find beaches near `origin`, fetch each
@@ -18,7 +21,7 @@ import java.time.{LocalDate, ZoneId}
  * the LLM synthesis step and the DSPy-optimized prompt behind it plug in.
  *
  * `distanceRefiner` is dependency-inverted rather than a hardcoded Azure Maps call: `Recommender`
- * lives in `marola-core`, which has zero Azure SDK dependency by design (`FUTURE-WORK.md` §7.2) —
+ * lives in `marola-core`, which has zero Azure SDK dependency by design (`FUTURE-WORK.md` §7.3) —
  * `marola-azure`'s `RouteFinder` depends on `marola-core`, not the other way around, so
  * `Recommender` can't reference it directly. `marola-cli` (which depends on both) supplies the
  * actual `RouteFinder.travelDistanceKm` function when an Azure Maps key is configured; `None` (the
@@ -30,13 +33,34 @@ object Recommender:
       origin: Coordinates,
       radiusKm: Double = 15.0,
       beachLimit: Int = 6,
-      distanceRefiner: Option[(Coordinates, Coordinates) => Double < Sync] = None
+      distanceRefiner: Option[(Coordinates, Coordinates) => Double < Sync] = None,
+      waterQuality: Option[WaterQualityClient] = None,
+      today: ZoneId => LocalDate = LocalDate.now(_)
   ): List[BestHour] < Sync =
     for
       beaches <- BeachFinder.nearby(origin, radiusKm, beachLimit)
       refined <- refineDistances(origin, beaches, distanceRefiner)
-      scored <- traverse(refined)(scoreTomorrow)
+      water <- fetchWaterQuality(waterQuality, refined)
+      scored <- traverse(refined)(beach => scoreTomorrow(beach, water.get(beach.name), today))
     yield scored.flatten.sortBy(-_.score)
+
+  /**
+   * MIP-0001: one call for the whole region, matched to the short list. Same dependency-inversion
+   * shape as `distanceRefiner` — `marola-core` knows the trait, `marola-cli` picks the provider.
+   * Any failure (portal down, shape changed) yields no data for every beach, never a crash: absence
+   * of data is scored as nothing, and the column says "no data".
+   */
+  private def fetchWaterQuality(
+      client: Option[WaterQualityClient],
+      beaches: List[Beach]
+  ): Map[String, WaterQuality] < Sync =
+    client match
+      case None => Map.empty[String, WaterQuality]
+      case Some(c) =>
+        Abort.run(Abort.catching[Throwable](c.samplingPoints)).map {
+          case Result.Success(points) => WaterQualityMatcher.assign(beaches, points, c.name)
+          case _                      => Map.empty[String, WaterQuality]
+        }
 
   /**
    * Upgrades each beach's haversine distance (`BeachFinder`'s "as the crow flies" default) to
@@ -73,33 +97,51 @@ object Recommender:
       origin: Coordinates,
       radiusKm: Double = 15.0,
       beachLimit: Int = 6,
-      distanceRefiner: Option[(Coordinates, Coordinates) => Double < Sync] = None
+      distanceRefiner: Option[(Coordinates, Coordinates) => Double < Sync] = None,
+      waterQuality: Option[WaterQualityClient] = None,
+      today: ZoneId => LocalDate = LocalDate.now(_)
   ): List[BestHour] < Sync =
-    bestHoursTomorrow(origin, radiusKm, beachLimit, distanceRefiner).map { all =>
-      all
-        .groupBy(_.beach.name)
-        .values
-        .map(_.maxBy(_.score))
-        .toList
-        .sortBy(-_.score)
+    bestHoursTomorrow(origin, radiusKm, beachLimit, distanceRefiner, waterQuality, today).map {
+      all =>
+        all
+          .groupBy(_.beach.name)
+          .values
+          .map(_.maxBy(_.score))
+          .toList
+          .sortBy(-_.score)
     }
 
-  private def scoreTomorrow(beach: Beach): List[BestHour] < Sync =
+  // `today` is injectable (the one clock read in the pipeline) so the fixture-replay regression
+  // test can pin "tomorrow" to the day its recorded forecasts cover.
+  private def scoreTomorrow(
+      beach: Beach,
+      water: Option[WaterQuality],
+      todayIn: ZoneId => LocalDate
+  ): List[BestHour] < Sync =
     OpenMeteoClient.forecastFor(beach).map { forecast =>
-      val tomorrow = LocalDate.now(ZoneId.of(forecast.timezoneId)).plusDays(1)
-      forecast.hours
-        .filter(_.time.toLocalDate.isEqual(tomorrow))
-        .map { hour =>
-          val (score, notes) = Swimability.score(hour)
-          BestHour(
-            beach,
-            hour,
-            score,
-            Swimability.jellyfishRisk(hour),
-            Swimability.whaleSightingLikelihood(hour),
-            notes
-          )
-        }
+      val today = todayIn(ZoneId.of(forecast.timezoneId))
+      val tomorrow = today.plusDays(1)
+      val hours = forecast.hours.filter(_.time.toLocalDate.isEqual(tomorrow))
+      // Per-beach, not per-hour: computed once here, carried on every BestHour (MIP-0001 §5.3).
+      val verdict = Swimability.waterVerdict(water, today)
+      val tides = Tides.extrema(hours)
+      val whalePeak = hours
+        .filter(_.isDaylight.contains(true))
+        .maxByOption(h => Swimability.whaleSightingLikelihood(h).ordinal)
+      hours.map { hour =>
+        val (score, notes) = Swimability.score(hour, verdict)
+        BestHour(
+          beach,
+          hour,
+          score,
+          Swimability.jellyfishRisk(hour),
+          Swimability.whaleSightingLikelihood(hour),
+          notes,
+          waterQuality = water,
+          dayTides = tides,
+          whalePeak = whalePeak
+        )
+      }
     }
 
   /**

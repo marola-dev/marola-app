@@ -1,10 +1,12 @@
 package marola.conditions
 
+import java.time.LocalDateTime
+
 import kyo.*
+
 import marola.http.Http
 import marola.json.JsonValue
-import marola.model.{BeachForecast, Beach, HourlyConditions}
-import java.time.LocalDateTime
+import marola.model.{Beach, BeachForecast, HourlyConditions}
 
 /**
  * Open-Meteo (open-meteo.com) — free, no API key for non-commercial use
@@ -30,6 +32,9 @@ object OpenMeteoClient:
     val marineUrl =
       s"$MarineBase?latitude=${coords.lat}&longitude=${coords.lon}" +
         "&hourly=wave_height,sea_surface_temperature,ocean_current_velocity" +
+        // MIP-0001: period/swell for the detailed block, sea level (tides) for `Tides.extrema`.
+        // Variable names confirmed live against the Marine API on 2026-09-05.
+        ",wave_period,wave_direction,swell_wave_height,swell_wave_period,sea_level_height_msl" +
         s"&forecast_days=$forecastDays&timezone=auto"
 
     for
@@ -53,6 +58,11 @@ object OpenMeteoClient:
     val waveHeight = col(marine, "wave_height")
     val seaTemp = col(marine, "sea_surface_temperature")
     val current = col(marine, "ocean_current_velocity")
+    val wavePeriod = col(marine, "wave_period")
+    val waveDirection = col(marine, "wave_direction")
+    val swellHeight = col(marine, "swell_wave_height")
+    val swellPeriod = col(marine, "swell_wave_period")
+    val seaLevel = col(marine, "sea_level_height_msl")
     val marineIndexByTime = marineTimes.zipWithIndex.toMap
 
     def at(vec: Vector[Option[Double]], idx: Int): Option[Double] =
@@ -71,7 +81,12 @@ object OpenMeteoClient:
           currentVelocityKmh = mi.flatMap(at(current, _)),
           uvIndex = at(uvIndex, i),
           precipitationProbabilityPct = at(precipitation, i),
-          isDaylight = at(isDay, i).map(_ == 1.0)
+          isDaylight = at(isDay, i).map(_ == 1.0),
+          wavePeriodS = mi.flatMap(at(wavePeriod, _)),
+          waveDirectionDeg = mi.flatMap(at(waveDirection, _)),
+          swellWaveHeightM = mi.flatMap(at(swellHeight, _)),
+          swellWavePeriodS = mi.flatMap(at(swellPeriod, _)),
+          seaLevelM = mi.flatMap(at(seaLevel, _))
         )
     }.toList
 
