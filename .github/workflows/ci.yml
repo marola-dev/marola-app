@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Cache sbt / coursier
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.sbt
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', 'project/**') }}
+          restore-keys: |
+            ${{ runner.os }}-sbt-
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      # root aggregates all four submodules (core/local/azure/cli, docs/FUTURE-WORK.md §7.2) and
+      # .aggregate() cascades compile/test/scalafmtCheckAll by default, so this fails if *any* of
+      # the four fails to compile/format/test.
+      - name: Check formatting
+        run: sbt scalafmtCheckAll
+
+      - name: Compile
+        run: sbt compile
+
+      # Excludes the E2E suite (see cli/src/test/scala/marola/E2ESpec.scala) via build.sbt's
+      # default Test/testOptions — this only runs the pure, no-network unit tests. The E2E suite
+      # has its own manually-triggered workflow: marola-e2e.yml.
+      - name: Test (unit tests only — E2E excluded by default, see marola-e2e.yml)
+        run: sbt test

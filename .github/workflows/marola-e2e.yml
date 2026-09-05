@@ -1,0 +1,55 @@
+name: marola E2E (manual)
+
+# Manual trigger ONLY — no `push`/`pull_request` trigger, deliberately. This hits live
+# Overpass/Open-Meteo and a real (if free, local) Ollama model, which makes it slower and more
+# flake-prone than the fast unit-test suite ci.yml runs on every push — exactly why
+# cli/src/test/scala/marola/E2ESpec.scala is tagged E2E and excluded from `sbt test`'s
+# default run in the first place (see build.sbt). Run it from the Actions tab ("Run workflow"),
+# or `gh workflow run marola-e2e.yml`.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Cache sbt / coursier
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.sbt
+            ~/.ivy2/cache
+          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', 'project/**') }}
+          restore-keys: |
+            ${{ runner.os }}-sbt-
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      # "Cheap" E2E: a real local LLM, not a paid API call — llama3.2:1b is a 1.3GB download and
+      # runs fine on a GitHub-hosted runner's CPU (no GPU needed, confirmed while writing
+      # docs/RUN-LOCALLY.md: a full pipeline run including both LLM passes took well under a
+      # minute on ordinary hardware). Zero API cost either way — the only cost here is CI minutes.
+      - name: Install Ollama and pull a small model
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:11434/api/tags >/dev/null 2>&1 && break
+            sleep 1
+          done
+          ollama pull llama3.2:1b
+
+      - name: Run E2E suite
+        env:
+          MAROLA_LOCAL_LLM_MODEL: llama3.2:1b
+        run: sbt 'set cli/Test/testOptions := Seq(Tests.Argument(new TestFramework("munit.Framework"), "--include-tags=E2E"))' 'cli/testOnly marola.E2ESpec'
