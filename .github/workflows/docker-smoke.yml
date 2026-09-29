@@ -26,13 +26,14 @@ on:
       image:
         description: "Image to run"
         type: string
-        default: "ghcr.io/h0ffmann/marola:jvm"
+        default: "ghcr.io/marola-dev/marola:jvm"
   schedule:
     - cron: "30 9 * * *" # 06:30 in Brazil, before the morning swim (MIP-0008.tasks.md decision 3)
 
 permissions:
   contents: write # push to the site-data branch
   actions: write # gh workflow run site.yml
+  packages: read # the image is private until the maintainer flips it (MIP-0065 §4.3)
 
 concurrency:
   group: docker-smoke
@@ -40,14 +41,10 @@ concurrency:
 
 env:
   MODEL: ${{ inputs.model || 'llama3.2:1b' }}
-  IMAGE: ${{ inputs.image || 'ghcr.io/h0ffmann/marola:jvm' }}
+  IMAGE: ${{ inputs.image || 'ghcr.io/marola-dev/marola:jvm' }}
 
 jobs:
-  # Gated with the builds, though it neither builds nor pushes: it runs `:jvm` from GHCR, and with
-  # docker.yml paused that image stops tracking main. A daily green smoke test against an ageing
-  # image is worse than a visibly skipped one. DOCKER_CI=on re-enables both together.
   smoke:
-    if: vars.DOCKER_CI == 'on'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -67,7 +64,7 @@ jobs:
         if: steps.ollama-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/.local/bin
-          curl -fsSL https://ollama.com/download/ollama-linux-amd64.tgz | tar -xz -C /tmp
+          curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst | tar --zstd -x -C /tmp
           cp /tmp/bin/ollama ~/.local/bin/ollama
 
       - name: Start Ollama and ensure the model
@@ -76,6 +73,12 @@ jobs:
           nohup ollama serve >/tmp/ollama.log 2>&1 &
           for _ in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
           ollama list | awk 'NR>1{print $1}' | grep -qx "$MODEL" || ollama pull "$MODEL"
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # `--network host` so the container reaches the runner's Ollama at localhost:11434, the
       # image's default.
