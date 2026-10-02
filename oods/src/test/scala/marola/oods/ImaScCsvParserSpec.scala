@@ -21,6 +21,10 @@ class ImaScCsvParserSpec extends munit.FunSuite:
   private lazy val points: List[PointRow] =
     ImaScAdapter.parsePoints(source, fixture("points.json"))
 
+  private lazy val registry: Map[(String, String), PointRow] = ImaScCsv.index(points) match
+    case Right(index) => index
+    case Left(clash)  => fail(clash)
+
   private def parse(name: String): List[SampleRow] =
     ImaScCsv.parse(source, name, fixture(name), points) match
       case Right(rows) => rows
@@ -126,7 +130,7 @@ class ImaScCsvParserSpec extends munit.FunSuite:
 
     val placeholder = ImaScCsv.pointFor(
       source,
-      ImaScCsv.index(points),
+      registry,
       "Florianópolis",
       "Praia do Campeche",
       "Ponto 99"
@@ -136,7 +140,12 @@ class ImaScCsvParserSpec extends munit.FunSuite:
     assertEquals(placeholder.pointKey, "ima-sc:florianopolis/campeche/ponto-99")
   }
 
-  test("two feed points that normalise alike resolve to the greatest key, whatever the order") {
+  test("the feed's 260 points are 260 distinct (beach, point) pairs") {
+    assertEquals(registry.size, 260)
+    assertEquals(points.size, 260)
+  }
+
+  test("two feed points that normalise alike are refused, both keys named") {
     def twin(key: String) = PointRow(
       sourceId = source.id,
       pointKey = key,
@@ -153,9 +162,46 @@ class ImaScCsvParserSpec extends munit.FunSuite:
       firstSeen = None,
       lastSeen = None
     )
-    // `build.sql` picks max(point_key) over the same triple; the two must agree or a point's
-    // history splits between the SQL build and the ingest's own join.
-    val triple = ("florianopolis", "campeche", "ponto 35")
-    assertEquals(ImaScCsv.index(List(twin("bbb"), twin("aaa")))(triple).pointKey, "bbb")
-    assertEquals(ImaScCsv.index(List(twin("aaa"), twin("bbb")))(triple).pointKey, "bbb")
+    // Silently keeping one of the two would hang a sample on another beach's coordinates.
+    ImaScCsv.index(List(twin("bbb"), twin("aaa"))) match
+      case Left(clash) =>
+        assert(clash.contains("aaa") && clash.contains("bbb"), clash)
+        assert(clash.contains("campeche") && clash.contains("ponto 35"), clash)
+      case Right(index) => fail(s"expected a collision, got ${index.size} entries")
+
+    val clashing =
+      ImaScCsv.parse(
+        source,
+        "raw/clash.csv",
+        fixture("campeche-2026.csv"),
+        List(twin("x"), twin("y"))
+      )
+    clashing match
+      case Left(ParseError("raw/clash.csv", detail)) =>
+        assert(detail.contains("x") && detail.contains("y"), detail)
+      case other => fail(s"expected a ParseError, got $other")
+  }
+
+  test("the echoed Municipio is the request's, so a row keys on (beach, point) against the feed") {
+    // `exportarCSV` keys on `localID` alone and answers either municipality with the same body,
+    // column 1 set to whatever was asked for — so keying on it would split a beach's history in
+    // two and lose the coordinates of half of it (MIP-0056 §4.1).
+    val asItajai = fixture("campeche-2026.csv").replace("\nFlorianópolis,", "\nItajaí,")
+    assert(asItajai.contains("\nItajaí,"), "the fixture's first column is unquoted")
+    assert(!asItajai.contains("\nFlorianópolis,"), "every data row was rewritten")
+
+    val rows = ImaScCsv.parse(source, "raw/as-itajai.csv", asItajai, points) match
+      case Right(parsed) => parsed
+      case Left(error)   => fail(s"expected a parse, got $error")
+    val campecheKeys = points.filter(_.beachName == "Praia do Campeche").map(_.pointKey).toSet
+    assertEquals(campecheKeys.size, 5)
+    assertEquals(rows.size, 90)
+    assertEquals(rows.map(_.pointKey).toSet, campecheKeys)
+    assertEquals(rows.map(_.pointKey).toSet, parse("campeche-2026.csv").map(_.pointKey).toSet)
+
+    // And the stored municipality is the feed's, not the one the export echoed back.
+    val point = ImaScCsv.pointFor(source, registry, "Itajaí", "Praia do Campeche", "Ponto 35")
+    assertEquals(point.municipality, "Florianópolis")
+    assertEquals(point.pointKey, "58fbe2a9-d9ce-466f-94c3-5dbd46416ead")
+    assertEquals(point.geoSource, GeoSource.Feed)
   }
