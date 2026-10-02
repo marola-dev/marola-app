@@ -181,6 +181,26 @@ lazy val azure = (project in file("azure"))
     )
   )
 
+// The data pipeline behind `data/oods/` (MIP-0056): an offline ingest/build step, never part of
+// the runtime image — no Dockerfile copies it and `cli` does not depend on it.
+lazy val oods = (project in file("oods"))
+  .dependsOn(local)
+  .settings(baseSettings)
+  .settings(
+    name := "marola-oods",
+    // The transform engine (MIP-0056 §4.4/§5.3), this module only — nothing else in the build sees
+    // it. The native library ships inside the jar, so no system package is needed; the `duckdb`
+    // CLI flake.nix adds for `just oods-sql` is a separate 1.5.5 and need not match, because only
+    // Parquet files cross that boundary.
+    libraryDependencies += "org.duckdb" % "duckdb_jdbc" % "1.5.5.1",
+    // oods/sql/*.sql are read from the classpath, so `oods/run` works from any working directory
+    // while the files stay where the MIP's layout and `just oods-sql` expect them.
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "sql",
+    // Three mains (ingest, build, check): pin one, or `oods/run` prompts and a batch run hangs —
+    // the same trap `cli`'s block below documents. `oods/runMain` reaches the other two.
+    Compile / run / mainClass := Some("marola.oods.Main")
+  )
+
 lazy val cli = (project in file("cli"))
   .dependsOn(core, local, azure)
   .enablePlugins(NativeImagePlugin)
@@ -247,7 +267,7 @@ lazy val cli = (project in file("cli"))
   )
 
 lazy val root = (project in file("."))
-  .aggregate(core, local, azure, cli)
+  .aggregate(core, local, azure, cli, oods)
   .settings(
     name := "marola",
     publish / skip := true,
