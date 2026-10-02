@@ -86,8 +86,7 @@ object SwimConditionsMcpServer:
             "condition" -> JsonValue.str(s.condition match
               case BathingCondition.Proper   => "proper"
               case BathingCondition.Improper => "improper"
-              case BathingCondition.Unknown  => "unknown"
-            ),
+              case BathingCondition.Unknown  => "unknown"),
             "enterococci_per_100ml" -> s.enterococciPer100ml
               .map(n => JsonValue.num(n.toDouble))
               .getOrElse(JsonValue.JNull),

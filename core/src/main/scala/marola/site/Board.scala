@@ -159,8 +159,7 @@ object Board:
           "condition" -> JsonValue.str(s.condition match
             case BathingCondition.Proper   => "proper"
             case BathingCondition.Improper => "improper"
-            case BathingCondition.Unknown  => "unknown"
-          ),
+            case BathingCondition.Unknown  => "unknown"),
           "sampled_on" -> JsonValue.str(s.sampledOn.toString),
           "enterococci_per_100ml" -> optNum(s.enterococciPer100ml.map(_.toDouble)),
           "rain" -> optStr(s.rain)
@@ -218,8 +217,7 @@ object Board:
     JsonValue.obj(
       "kind" -> JsonValue.str(e.kind match
         case LoreKind.Secret   => "secret"
-        case LoreKind.Creature => "creature"
-      ),
+        case LoreKind.Creature => "creature"),
       "text" -> JsonValue.str(e.text),
       "source" -> JsonValue.str(e.source),
       "lang" -> JsonValue.str(e.lang)
