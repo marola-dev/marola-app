@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build-resources-tarball — the app -> ml contract (MIP-0070 §5.4): a tarball of the resource
-# files marola-ml's finetune/ and benchmark gate read. ci.yml uploads this on every push to main;
+# files marola-ml's finetune/ and benchmark gate read. release.yml attaches this to each v* release;
 # marola-ml's resources-fetch.sh expects it as ml-resources-<tag>.tar.gz on an app release.
 #
 #   scripts/build-resources-tarball.sh [out-tar.gz]   # default .tmp/ml-resources.tar.gz

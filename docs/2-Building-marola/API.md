@@ -1,7 +1,7 @@
 # API reference
 
-Generated from the source on every push to `main`, by
-[`api-docs.yml`](https://github.com/marola-dev/marola/blob/main/.github/workflows/api-docs.yml),
+Generated from each `v*` tag of marola-app by
+[`release.yml`](https://github.com/marola-dev/marola-app/blob/main/.github/workflows/release.yml),
 and published alongside these pages. The trees are HTML, not Markdown, so they sit beside this
 site rather than inside its navigation — this page is the way in.
 

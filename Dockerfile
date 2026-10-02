@@ -3,10 +3,10 @@
 #
 #   builder  sbt cli/assembly on Temurin 25 → /marola.jar (never shipped)
 #   corpus   checks the fetched .tmp/knowledge has documents → /knowledge (never shipped)
-#   jvm      Temurin 25 JRE (alpine) + the jar — `docker run --rm ghcr.io/marola-dev/marola:jvm --brief --lat … --lon …`
+#   jvm      Temurin 25 JRE (alpine) + the jar — `docker run --rm ghcr.io/marola-dev/marola-app:jvm --brief --lat … --lon …`
 #   dev      the literal `nix develop`, for people without Nix: `docker run -it … marola:dev` drops you in the dev shell
 #   native-build  GraalVM native-image over the same jar (never shipped)
-#   native   one static-ish binary on distroless — `docker run --rm ghcr.io/marola-dev/marola:native --brief --lat … --lon …`
+#   native   one static-ish binary on distroless — `docker run --rm ghcr.io/marola-dev/marola-app:native --brief --lat … --lon …`
 #
 # Secrets are never copied: `.dockerignore` is an allowlist and `.env` is not on it.
 # Base images are literal tags, not ARGs: hadolint's DL3006 does not resolve an ARG default.
@@ -56,7 +56,7 @@ ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=75 -XX:TieredStopAt
 ENTRYPOINT ["java", "-jar", "/app/marola.jar"]
 CMD ["--brief"]
 # The MCP server is the other main class in the same jar (build.sbt):
-#   docker run --rm -i --entrypoint java ghcr.io/marola-dev/marola:jvm -cp /app/marola.jar marola.agent.SwimConditionsMcpServer
+#   docker run --rm -i --entrypoint java ghcr.io/marola-dev/marola-app:jvm -cp /app/marola.jar marola.agent.SwimConditionsMcpServer
 
 # --- native-build ----------------------------------------------------------------------------
 # The same jar, compiled ahead of time. The arguments and reachability metadata come from the jar
@@ -95,3 +95,7 @@ RUN nix develop --command true
 COPY . .
 ENTRYPOINT ["nix", "develop", "--command"]
 CMD ["just", "--list"]
+
+# --- default ---------------------------------------------------------------------------------
+# `docker build .` with no --target builds the last stage: the jvm image, not `dev`.
+FROM jvm AS default

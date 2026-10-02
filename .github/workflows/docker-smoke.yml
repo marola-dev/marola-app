@@ -26,7 +26,7 @@ on:
       image:
         description: "Image to run"
         type: string
-        default: "ghcr.io/marola-dev/marola:jvm"
+        default: "ghcr.io/marola-dev/marola-app:jvm"
   schedule:
     - cron: "30 9 * * *" # 06:30 in Brazil, before the morning swim (MIP-0008.tasks.md decision 3)
 
@@ -40,7 +40,7 @@ concurrency:
 
 env:
   MODEL: ${{ inputs.model || 'llama3.2:1b' }}
-  IMAGE: ${{ inputs.image || 'ghcr.io/marola-dev/marola:jvm' }}
+  IMAGE: ${{ inputs.image || 'ghcr.io/marola-dev/marola-app:jvm' }}
 
 jobs:
   smoke:
