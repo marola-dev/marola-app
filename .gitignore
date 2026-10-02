@@ -1,0 +1,47 @@
+# sbt / Scala
+target/
+project/target/
+project/project/
+.bloop/
+.bsp/
+.metals/
+.ammonite/
+metals.sbt
+.ivy2/
+.coursier/
+
+# Nix
+result
+result-*
+.direnv/
+
+# Env / secrets
+.env
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+.idea/
+*.iml
+.vscode/
+*.log
+__pycache__/
+*.pyc
+
+# The corpus and resources fetches, sbt's boot socket dir, release builds
+/.tmp/
+
+# Runtime output: the knowledge index, sightings, benchmark reports
+/data/*
+!/data/.gitkeep
+
+# `--site`'s default output; the map itself is marola-site's
+/site/dist/
+
+.claude/worktrees/
+.claude/settings.local.json
+/CLAUDE.local.md
+
+# marola-devkit's pinned tree, linked by the flake's shellHook (MIP-0070)
+/.devkit

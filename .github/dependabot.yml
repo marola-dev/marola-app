@@ -1,27 +1,17 @@
-# Scala/sbt dependencies (core/local/cli) are watched by scala-steward.yml instead — see
-# CONTRIBUTING.md.
-#
-# One pull request for every dependency update (dspy/ and finetune/'s pip entries left with their
-# code for marola-ml, MIP-0070). The multi-ecosystem group's schedule (Mondays and Fridays, 09:00
-# America/Sao_Paulo) is the one that applies, and `patterns` is required on every entry that joins
-# it. `cronjob` is required whenever `interval` is `cron`, `day`/`time` are not allowed
-# beside it, and the zone goes in `timezone`, never inside the expression
-# (schemastore.org/dependabot-2.0.json, verified 2026-09-12).
+# Scala/sbt dependencies are scala-steward.yml's. This file watches the workflows' actions only.
 version: 2
-
-multi-ecosystem-groups:
-  marola-deps:
-    schedule:
-      interval: "cron"
-      cronjob: "0 9 * * 1,5"
-      timezone: "America/Sao_Paulo"
 
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
-    patterns: ["*"]
-    multi-ecosystem-group: "marola-deps"
+    schedule:
+      interval: "cron"
+      cronjob: "0 9 * * 1,5"
+      timezone: "America/Sao_Paulo"
+    groups:
+      actions:
+        patterns: ["*"]
     # Bumped by hand: the tag also lives in `devkit-ref:` inputs and flake.nix, which dependabot
-    # would leave behind, and deps-merge auto-merges a green PR.
+    # would leave behind.
     ignore:
       - dependency-name: "marola-dev/marola-devkit*"
