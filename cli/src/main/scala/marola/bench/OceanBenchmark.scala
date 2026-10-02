@@ -171,20 +171,17 @@ object OceanBenchmark:
               then
                 f"- On questions the corpus covers, marola (strict) matches or beats the plain prompt on coverage (${strict.coverageInCorpus}%.2f vs ${base.coverageInCorpus}%.2f) *and* cites its source on ${strict.citedPct}%.0f%% of answers — the baseline cites on ${base.citedPct}%.0f%%. That citation is the user-visible win: a swimmer can check it."
               else
-                f"- On questions the corpus covers, the plain prompt still out-covers marola (strict) (${base.coverageInCorpus}%.2f vs ${strict.coverageInCorpus}%.2f). The corpus text is missing the expected facts, or retrieval ranks the wrong chunk — see the per-question table, fix the document, re-run `just knowledge-index`."
-    )
+                f"- On questions the corpus covers, the plain prompt still out-covers marola (strict) (${base.coverageInCorpus}%.2f vs ${strict.coverageInCorpus}%.2f). The corpus text is missing the expected facts, or retrieval ranks the wrong chunk — see the per-question table, fix the document, re-run `just knowledge-index`.")
     lines += (if base.coverageGeneral > strict.coverageGeneral
               then
                 f"- Off-corpus (history/science/animals), the plain prompt wins (${base.coverageGeneral}%.2f vs strict ${strict.coverageGeneral}%.2f): strict marola abstains on ${strict.abstainedPct}%.0f%% of all questions. That is honest but a poor experience."
               else
-                f"- Off-corpus, marola (strict) is not behind the plain prompt (${strict.coverageGeneral}%.2f vs ${base.coverageGeneral}%.2f)."
-    )
+                f"- Off-corpus, marola (strict) is not behind the plain prompt (${strict.coverageGeneral}%.2f vs ${base.coverageGeneral}%.2f).")
     lines += (if general.coverageAll >= base.coverageAll
               then
                 f"- `rag-general` (the default `--ask` mode) closes the gap: overall coverage ${general.coverageAll}%.2f vs baseline ${base.coverageAll}%.2f, with citations where the corpus applies and a visible 'unsourced' label elsewhere."
               else
-                f"- `rag-general` is still below the baseline overall (${general.coverageAll}%.2f vs ${base.coverageAll}%.2f): the relevance threshold is probably routing corpus questions to general knowledge, or vice-versa — tune `MAROLA_ASK_MIN_SCORE` (see the top-score column) and re-run."
-    )
+                f"- `rag-general` is still below the baseline overall (${general.coverageAll}%.2f vs ${base.coverageAll}%.2f): the relevance threshold is probably routing corpus questions to general knowledge, or vice-versa — tune `MAROLA_ASK_MIN_SCORE` (see the top-score column) and re-run.")
     val missedTopics = results
       .filter(r => r.arm == "rag-strict" && !r.q.inCorpus && r.abstained)
       .map(_.q.topic)
@@ -206,7 +203,11 @@ object OceanBenchmark:
     sb ++= "| id | topic | in corpus | arm | coverage | cited | abstained | ms | answer (first 140 chars) |\n|---|---|---|---|---|---|---|---|---|\n"
     results.foreach { r =>
       val a = r.answer.replace("\n", " ").replace("|", "/").take(140)
-      sb ++= f"| ${r.q.id} | ${r.q.topic} | ${if r.q.inCorpus then "yes" else "no"} | ${r.arm} | ${r.coverage}%.2f | ${if r.cited then "yes" else ""} | ${if r.abstained then "yes" else ""} | ${r.ms} | $a |\n"
+      sb ++= f"| ${r.q.id} | ${r.q.topic} | ${
+          if r.q.inCorpus then "yes" else "no"
+        } | ${r.arm} | ${r.coverage}%.2f | ${if r.cited then "yes" else ""} | ${
+          if r.abstained then "yes" else ""
+        } | ${r.ms} | $a |\n"
     }
     sb.toString
 
