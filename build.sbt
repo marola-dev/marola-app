@@ -1,4 +1,4 @@
-// REQUIRES JDK 25: Kyo 1.0.0-RC5's artifacts are compiled for class-file version 69, so both the
+// REQUIRES JDK 25: Kyo 1.0.0-RC7's artifacts are compiled for class-file version 69, so both the
 // JVM running sbt and the runtime executing the jar must be 25+ (flake.nix and the Dockerfile pin
 // it). An older JVM fails with `UnsupportedClassVersionError: kyo/Frame$package$Frame$`.
 //
@@ -12,7 +12,7 @@ ThisBuild / organization := "com.marola"
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-val kyoVersion = "1.0.0-RC5"
+val kyoVersion = "1.0.0-RC7"
 
 val munitFramework = new TestFramework("munit.Framework")
 

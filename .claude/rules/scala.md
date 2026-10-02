@@ -189,11 +189,11 @@ written.
 
 ## Kyo and the JDK
 
-- **Kyo is pre-1.0** (currently `1.0.0-RC5`) with no version-specific published docs; when unsure
+- **Kyo is pre-1.0** (currently `1.0.0-RC7`) with no version-specific published docs; when unsure
   of an API, verify against the actual jar (`javap` on the decompiled class) rather than guessing
   from `getkyo.io`'s latest-version docs, which can silently drift from what's pinned. See
   `docs/4-Research-and-plans/FUTURE-WORK.md` §2-3 and `docs/2-Building-marola/EFFECTS-MAP.md` for examples of this verification approach.
-- **JDK 25 is required, not just "17+".** Scala 3.9 itself only needs JDK 17+, but Kyo 1.0.0-RC5
+- **JDK 25 is required, not just "17+".** Scala 3.9 itself only needs JDK 17+, but Kyo 1.0.0-RC7
   compiles with `-release 25` and its artifacts won't load on an older JVM. This already broke a
   real build with `UnsupportedClassVersionError` on a JDK-24 runtime. `flake.nix` pins JDK 25. If
   you're compiling from an IDE (IntelliJ, etc.) rather than a terminal, check the IDE's own Project
