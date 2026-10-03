@@ -139,6 +139,22 @@ ollama-up model=env_var_or_default("MAROLA_LOCAL_LLM_MODEL", "llama3.2") embed=e
 resources-tarball tag:
     scripts/build-resources-tarball.sh .tmp/ml-resources-{{ tag }}.tar.gz
 
+# Run by the devkit's api-docs.yml (MIP-0074 §5.2); docs.marola.dev serves script-src 'self'.
+# Scaladoc, one tree per module, into <out>/scala/{core,local,cli}, third-party scripts stripped.
+api-docs out:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out="{{ out }}"
+    mkdir -p "$XDG_RUNTIME_DIR"
+    sbt core/doc local/doc cli/doc
+    rm -rf "$out/scala"
+    for m in core local cli; do
+        mkdir -p "$out/scala/$m"
+        cp -r "$m"/target/scala-*/api/. "$out/scala/$m/"
+    done
+    python3 scripts/strip_external_scripts.py "$out/scala"
+    python3 scripts/strip_external_scripts.py --check "$out"
+
 # Build the CLI image. target=jvm (default), dev or native. MIP-0008.
 docker-build target="jvm": corpus-fetch
     docker build --target {{ target }} -t marola:{{ target }} .
