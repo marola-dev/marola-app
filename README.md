@@ -35,6 +35,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 
 - The image `ghcr.io/marola-dev/marola-app` (`:jvm`, `:jvm-<sha>`, `:native`), from every `main`
   push. marola-site and marola-ml pin it by digest.
+- Scaladoc on the `api-docs` branch, force-pushed from every `main` push (one commit, the latest).
 - On each `v*` tag: `api-docs.tar.gz` (Scaladoc, shown on [docs.marola.dev](https://docs.marola.dev/2-Building-marola/API/))
   and `ml-resources-<tag>.tar.gz` (the prompts, sea lore and benchmark questions marola-ml reads).
 
