@@ -210,3 +210,5 @@ object Recommender:
           b <- f(head)
           bs <- traverse(tail)(f)
         yield b :: bs
+
+object ScratchBrokenGenerator { val x: Int = "deliberately broken for the MIP-0074 task 10 check" }
