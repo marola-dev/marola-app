@@ -95,8 +95,8 @@ def bestPerBeachTomorrow(...)(using clock: Clock): ...
 ```
 
 Tests supply `given Clock = _ => LocalDate.of(2026, 9, 5)`. The same pattern replaces
-`AppConfig.fromEnv` being called ad hoc (`EFFECTS-MAP.md` §2): `using config: AppConfig`, or Kyo's
-`Env[AppConfig]`, read once at the `KyoApp` boundary.
+`AppConfig.fromEnv` being called ad hoc ([effects map](1-design_effects.md) §2):
+`using config: AppConfig`, or Kyo's `Env[AppConfig]`, read once at the `KyoApp` boundary.
 
 ### 2.6 Extension methods on foreign types
 
