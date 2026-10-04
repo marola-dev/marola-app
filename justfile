@@ -40,7 +40,7 @@ quality-scala:
 quality-other:
     #!/usr/bin/env bash
     set -euo pipefail
-    for tool in ruff shellcheck actionlint hadolint agents-check; do command -v "$tool" >/dev/null || { echo "quality-other: $tool not installed — run inside 'nix develop'" >&2; exit 1; }; done
+    for tool in ruff shellcheck actionlint hadolint agents-check docs-lint; do command -v "$tool" >/dev/null || { echo "quality-other: $tool not installed — run inside 'nix develop'" >&2; exit 1; }; done
     just --list >/dev/null
     ruff check .
     ruff format --check .
@@ -54,6 +54,7 @@ quality-other:
     actionlint
     hadolint Dockerfile
     agents-check
+    docs-lint
     if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then docker compose --profile mlflow --profile ollama --profile local config --quiet && echo "docker compose config: ok"; else echo "docker compose not installed — skipping compose config check"; fi
 
 quality-fix:

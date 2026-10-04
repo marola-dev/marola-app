@@ -57,7 +57,8 @@ just                 # list all recipes
 just build           # sbt compile
 just test            # corpus-fetch, then sbt test
 just quality         # quality-scala (scalafmt + scalafix) and quality-other (ruff, shellcheck,
-                     # the scripts' self-tests, actionlint, hadolint, agents-check)
+                     # the scripts' self-tests, actionlint, hadolint, agents-check,
+                     # docs-lint)
 just fmt             # scalafmtAll
 just run -- --brief  # the CLI; `just mcp-server` for the MCP tool server
 just e2e             # the live E2E test (Overpass/Open-Meteo/Ollama), excluded from `just test`

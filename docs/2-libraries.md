@@ -45,7 +45,7 @@ All in `project/plugins.sbt`.
 
 | Tool | Version | Pinned in | Why |
 |---|---|---|---|
-| marola-devkit | v0.3.0 | `flake.nix`, every devkit `uses:` and `devkit-ref:` in `.github/workflows/`, the plugin marketplace `ref` in `.claude/settings.json` | The shared recipes, git hooks, reusable workflows and lint tools |
+| marola-devkit | v0.4.1 | `flake.nix`, every devkit `uses:` and `devkit-ref:` and the docs-lint clone in `.github/workflows/`, the plugin marketplace `ref` in `.claude/settings.json` | The shared recipes, git hooks, reusable workflows and lint tools, `docs-lint` included |
 | nixpkgs | `nixos-unstable`, locked | `flake.lock` | What `nix develop` and the `dev` image resolve; CI's `flake-lock` job fails when the lock is stale |
 | ruff, actionlint, hadolint | 0.16.5, 1.7.12, 2.14.0 | `ci.yml` inputs | The versions CI lints with; locally they come from the devkit |
 | `sbtscala/scala-sbt` | `eclipse-temurin-25.0.4_7_1.13.0_3.8.4` | `Dockerfile` (`builder`) | A JDK 25 build image; sbt itself still runs at `build.properties`' version |

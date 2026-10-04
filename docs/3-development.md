@@ -17,8 +17,8 @@ just build && just test && just quality
 ```
 
 `just quality` is `quality-scala` (scalafmt and scalafix through sbt) plus `quality-other`: ruff,
-shellcheck, the `scripts/*` self-tests, actionlint, hadolint, agents-check and, when Docker is
-installed, `docker compose config` across every profile. A missing tool fails the recipe rather
+shellcheck, the `scripts/*` self-tests, actionlint, hadolint, agents-check, the devkit's `docs-lint`
+(stale recipes, paths and links in `README.md` and `docs/`) and, when Docker is installed, `docker compose config` across every profile. A missing tool fails the recipe rather
 than skipping it. `just quality-fix` applies what can be fixed automatically. The devkit's git hooks
 run `just precommit` (staged Scala must compile, staged workflows must pass actionlint) and
 `just prepush` (`quality-other` always, `quality-scala` when Scala or the build changed).
@@ -190,11 +190,12 @@ port.
 
 All under [`.github/workflows/`](../.github/workflows/), on `ubuntu-latest`. The generic jobs are
 the devkit's reusable workflows at the tag `flake.nix` pins; bump every `@v…`, every `devkit-ref:`,
-the flake input and `.claude/settings.json`'s marketplace `ref` together.
+the `docs-lint` clone in `ci.yml`, the flake input and `.claude/settings.json`'s marketplace `ref`
+together.
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR; push to `main` | The merge gates: `build-test` (devkit `scala-ci`: `corpusFetch`, scalafmt, scalafix, compile, test), `python` (ruff and the scripts' self-tests), `static` (actionlint, hadolint, shellcheck, compose config), `agents` (the AGENTS.md invariants block) and `flake-lock` (`flake.lock` is current). On `main` only, `coverage` (above) |
+| [`ci.yml`](../.github/workflows/ci.yml) | PR; push to `main` | The merge gates: `build-test` (devkit `scala-ci`: `corpusFetch`, scalafmt, scalafix, compile, test), `python` (ruff and the scripts' self-tests), `static` (actionlint, hadolint, shellcheck, compose config, `docs-lint`), `agents` (the AGENTS.md invariants block) and `flake-lock` (`flake.lock` is current). On `main` only, `coverage` (above) |
 | [`docker.yml`](../.github/workflows/docker.yml) | PR and push to `main` touching the image's inputs; dispatch | hadolint and compose config, then the `jvm` and `native` images (and `dev` on request), each with a start-up check; pushes only from `main` |
 | [`docker-smoke.yml`](../.github/workflows/docker-smoke.yml) | daily 09:30 UTC; dispatch (`lat`/`lon` or `maps_url`, `model`, `image`) | Runs `--summarize` in the published image against a cached `llama3.2:1b`; `scripts/smoke_record.py` records it as `smoke/` on marola-site's `site-data`, which the map's footer shows as "Last live run". Fails when the pipeline, the model or the reviewer did not answer |
 | [`marola-e2e.yml`](../.github/workflows/marola-e2e.yml) | dispatch | `E2ESpec` live (above) |
