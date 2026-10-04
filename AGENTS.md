@@ -45,7 +45,7 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 | app → site `site-data` | `coverage/` (`ci.yml` on `main`) and `smoke/` (`docker-smoke.yml`), pushed with `MAROLA_CROSS_REPO_PAT` |
 | app → ml | the same image (`--benchmark`) and `ml-resources-<tag>.tar.gz` on each `v*` release (`release.yml`, `scripts/build-resources-tarball.sh`) |
 | ml → app | the compiled-prompt JSON, as a bot PR into `core/src/main/resources/` |
-| app → umbrella | `README.md` + `docs/` (`notify-umbrella.yml`); Scaladoc (`just api-docs`) on the `api-docs` branch from every `main` push (`api-docs.yml`), and as `api-docs.tar.gz` on each `v*` release |
+| app → umbrella | `README.md` + `docs/` (`notify-umbrella.yml`); Scaladoc (`just api-docs`) on the `api-docs` branch from every `main` push (`api-docs.yml`) |
 
 No repo reads another's tree, and this repo's CI never builds a consumer (MIP-0070 §5.4).
 
@@ -77,8 +77,8 @@ Kyo's pre-1.0 API surface.
 ## Releases
 
 A `v*` tag (a human's act: `git tag` and `gh release` are denied in `.claude/settings.json`) runs
-`release.yml`, which attaches `api-docs.tar.gz` and `ml-resources-<tag>.tar.gz` and never
-replaces an asset already there. The image is not tied to tags: every `main` push publishes
+`release.yml`, which attaches `ml-resources-<tag>.tar.gz` and never replaces an asset already
+there. The image is not tied to tags: every `main` push publishes
 `:jvm` and `:jvm-<sha>`, and consumers pin the digest.
 
 ## Phase discipline (hard rule)
