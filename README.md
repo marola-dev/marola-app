@@ -64,7 +64,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 |---|---|
 | Consumes | the marola-corpus tag in [`corpus.version`](https://github.com/marola-dev/marola-app/blob/main/corpus.version); compiled prompts from marola-ml, as bot PRs into `core/src/main/resources/` |
 | Publishes | the image `ghcr.io/marola-dev/marola-app` (`:jvm`, `:jvm-<sha>`, `:native`) from every `main` push ([`docker.yml`](https://github.com/marola-dev/marola-app/blob/main/.github/workflows/docker.yml)); Scaladoc on the `api-docs` branch, force-pushed from every `main` push (one commit, the latest; [`api-docs.yml`](https://github.com/marola-dev/marola-app/blob/main/.github/workflows/api-docs.yml)); on each `v*` tag, `api-docs.tar.gz` (Scaladoc) and `ml-resources-<tag>.tar.gz` (the prompts, sea lore and benchmark questions marola-ml reads), via [`release.yml`](https://github.com/marola-dev/marola-app/blob/main/.github/workflows/release.yml); `coverage/` and `smoke/` to marola-site's `site-data` branch; `README.md` and `docs/` to docs.marola.dev |
-| Pinned by | marola-site, marola-ml and marola-oods pin the image in `marola-image`; marola-ml also pins the resources tarball in `resources.version` |
+| Pinned by | marola-site, marola-ml and marola-oods pin the image (tag + digest) in `marola-image`; marola-ml also pins the resources tarball in `resources.version` |
 
 ## Docs and AGENTS.md
 
