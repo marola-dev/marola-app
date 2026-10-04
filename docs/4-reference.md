@@ -2,8 +2,8 @@
 
 Every external source the app calls, and on what terms. All are free and need no key or account.
 The [CLI reference](4-reference_cli.md) and [Configuration reference](4-reference_config.md) say
-which mode calls what; [Architecture](https://docs.marola.dev/2-Building-marola/ARCHITECTURE/)
-says how the pipeline fits together.
+which mode calls what; [Integrations](1-design_integrations.md) says which class calls each
+source and what has been verified against it.
 
 ## Beaches, facilities and trails: OpenStreetMap
 
@@ -37,9 +37,9 @@ Each agency publishes its own state's samples, so the provider follows the origi
 
 | Agency | Covers (lat, lon) | Source |
 |---|---|---|
-| IMA/SC | −29.4 to −25.9, −53.9 to −48.3 | `POST https://balneabilidade.ima.sc.gov.br/relatorio/mapa`, the JSON the portal's map uses: every point with its last samples. When it fails, the newest weekly bulletin PDF linked from `http://balneabilidade.ima.sc.gov.br/`, joined by beach and point name with the HTTP feed's coordinates |
-| INEMA/BA | −18.5 to −8.5, −40.5 to −37.0 | The bulletin PDF at `http://balneabilidade.inema.ba.gov.br/index.php/relatoriodebalneabilidade/geraBoletim?idcampanha=83453` |
-| INEA/RJ | −23.4 to −21.0, −44.9 to −40.9 | The latest PDF per zone, found on `https://www.inea.rj.gov.br/rio-de-janeiro/` and `https://www.inea.rj.gov.br/niteroi/` |
+| IMA/SC | −29.4 to −25.9, −53.9 to −48.3 | `POST https://balneabilidade.ima.sc.gov.br/relatorio/mapa`, the JSON the portal's map uses: every point with its last samples. When it gives nothing, the newest weekly bulletin, `http://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/<date>`, found from the portal's index and joined by beach and point name with the coordinates of the same feed over plain HTTP, which carries no samples |
+| INEMA/BA | −18.5 to −8.5, −40.5 to −37.0 | The bulletin PDF at `http://balneabilidade.inema.ba.gov.br/index.php/relatoriodebalneabilidade/geraBoletim?idcampanha=83453`, placed with the bundled `sampling_points_ba.json` |
+| INEA/RJ | −23.4 to −21.0, −44.9 to −40.9 | The latest PDF per zone, found on `https://www.inea.rj.gov.br/rio-de-janeiro/` and `https://www.inea.rj.gov.br/niteroi/`, placed with the bundled `sampling_points_rj.json` |
 
 Every provider sits behind `CachedWaterQualityClient`, which serves the last good fetch from
 `data/water-cache/` when the agency is down. A sample older than 45 days reads "no data", cached or

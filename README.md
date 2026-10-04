@@ -68,6 +68,12 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 
 ## Docs and AGENTS.md
 
+- [Design](docs/1-design.md): the three modules, the module map, the pipeline, and why the map
+  is deterministic while the chat is generative.
+- [Heuristics](docs/1-design_heuristics.md): the score's deductions, the jellyfish and whale
+  heuristics, the water verdict, tides and sea lore.
+- [Integrations](docs/1-design_integrations.md): each pluggable backend, where it lives, and what
+  has been verified.
 - [Effects map](docs/1-design_effects.md): each module's purity and effect status, and where a
   signature hides an effect.
 - [Libraries](docs/2-libraries.md): each library and pinned tool, why, its version, and what was
@@ -75,7 +81,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 - [Scala 3 and JDK review](docs/2-libraries_scala3-jdk.md): what to adopt from Scala 3 and the JDK,
   and what to leave alone.
 - [Development](docs/3-development.md): testing and fixtures, images and compose profiles,
-  observability, the CI workflows, releases, secrets and cost.
+  observability, the CI workflows, code review, releases, secrets and cost.
 - [Data sources](docs/4-reference.md): every external API the app calls, and on what terms.
 - [API reference](docs/4-reference_api.md): the Scaladoc trees, and marola-ml's pdoc.
 - [CLI reference](docs/4-reference_cli.md): every flag and mode, the MCP tools, the chat server's

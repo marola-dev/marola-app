@@ -17,7 +17,7 @@ shell into the container.
 |---|---|---|
 | `MAROLA_LOCAL_LLM_BASE_URL` | `http://localhost:11434/v1` | Ollama's OpenAI-compatible base for the LLM and vision calls (`<base>/chat/completions`). The embedder calls the same server's native `/api/embed`, at this URL minus `/v1` |
 | `MAROLA_LOCAL_LLM_MODEL` | `llama3.2` | The model for `--summarize`, `--ask`, `--benchmark`, the chat server and the MCP `ask_ocean_question` |
-| `MAROLA_LOCAL_EMBED_MODEL` | `llama3.2` | The embedding model, see [Choosing the embedder](#choosing-the-embedder) |
+| `MAROLA_LOCAL_EMBED_MODEL` | `llama3.2` | The embedding model. Current Ollama refuses the default, a chat model: see [Choosing the embedder](#choosing-the-embedder) |
 | `MAROLA_LOCAL_VISION_MODEL` | `llava` | The model for `--analyze-photo`; it must be multimodal |
 | `MAROLA_KNOWLEDGE_DIR` | `./knowledge` | The corpus: the marola-corpus release's `knowledge` directory. The recipes set it to `.tmp/knowledge`, where `just corpus-fetch` unpacks the pin in `corpus.version`; in the image the default resolves to its own corpus, `/app/knowledge` |
 | `MAROLA_KNOWLEDGE_INDEX_PATH` | `./data/knowledge-index.json` | The embedding index, rebuilt when a corpus file or the embed model changes |
@@ -32,7 +32,7 @@ The chat server and the MCP server ignore `MAROLA_ASK_FALLBACK` and `MAROLA_ASK_
 
 | `MAROLA_LOCAL_EMBED_MODEL` | Size | Dimensions | When |
 |---|---|---|---|
-| `llama3.2` (default) | already pulled | 3072 | No extra download; retrieval is serviceable, not sharp |
+| `llama3.2` (default) | already pulled | 3072 | Fails on current Ollama, which no longer embeds with a chat model: `/api/embed` answers HTTP 501 ([#12](https://github.com/marola-dev/marola-app/issues/12)). Where it still works, retrieval is serviceable, not sharp |
 | `nomic-embed-text` | 274 MB | 768 | Sharper retrieval, but RAG with it trails the plain prompt today (marola-dev/marola-ml#4) |
 | `all-minilm` | 45 MB | 384 | The fastest re-index; use it while editing the corpus a lot |
 

@@ -35,7 +35,7 @@ object units:
 ```
 
 Land in `core/model/Units.scala`; migrate `Beach`, `HourlyConditions`, `BestHour.score`,
-`Recommender.radiusKm`. Pair with Iron refinements (`FUTURE-WORK.md` §6) for the 0-100 and
+`Recommender.radiusKm`. Pair with Iron refinements ([Libraries](2-libraries.md#neotypes-and-iron)) for the 0-100 and
 lat/lon ranges once the aliases exist.
 
 ### 2.2 Sum types instead of flag-bags
