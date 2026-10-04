@@ -2,7 +2,7 @@
 
 The internals of the score, the jellyfish and whale heuristics, the water verdict and the other
 pure rules behind a recommendation. What they cannot tell a swimmer, in words meant for one, is
-[Limitations](https://docs.marola.dev/1-Using-marola/LIMITATIONS/) (MIP-0074 §6); this page is the
+[Limitations](https://docs.marola.dev/1-Using-marola/LIMITATIONS/); this page is the
 mechanics, for changing them. Everything here is a pure function in `core`, with no effect type,
 pinned by the spec named in each section.
 
@@ -96,8 +96,7 @@ otherwise be attached to it. Pinned by `WaterQualityMatcherSpec`.
 ## Tides
 
 [`Tides.extrema`](../core/src/main/scala/marola/conditions/Tides.scala) reads high and low water
-off Open-Meteo's hourly `sea_level_height_msl`: an hour higher (or lower) than both neighbours is a
-candidate. Kept turns alternate; a same-type candidate replaces the kept one when more extreme, and
+off Open-Meteo's hourly `sea_level_height_msl`: a local peak or trough is a candidate. Kept turns alternate; a same-type candidate replaces the kept one when more extreme, and
 an opposite-type one less than 0.1 m away from the last kept turn is dropped as sampling noise.
 There is no tide-table API or harmonic model, so a turn is only as precise as the hour. Pinned by
 `TidesSpec`.

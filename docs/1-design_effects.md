@@ -29,10 +29,10 @@ the ones worth fixing regardless of how much of the rest gets migrated to richer
 | `water/WaterQualityMatcher`, `scoring/Swimability.waterVerdict`, `conditions/Tides`, `lore/SeaLore.pick` | Pure | MIP-0001's logic; all unit-tested |
 | `water/ImaScWaterQualityClient.samplingPoints`, `marola/knowledge/OllamaEmbedder.embed` | `< Sync` | HTTP via `Http` |
 | `marola/knowledge/FileKnowledgeStore` | `< Sync` | File I/O and embedding wrapped in `Sync.defer`/`Embedder`; `Corpus.chunkDocument`/`cosine` are pure |
-| `lore/SeaLore.loadDefault` | Hidden effect ⚠️ (minor) | Classpath read with no effect type — same class as `CompiledPrompt.loadFromFile` above |
+| `lore/SeaLore.loadDefault` | Hidden effect ⚠️ (minor) | Classpath read with no effect type |
 | `location/IpGeolocation.locate` | `< Sync` | Same; each provider call is individually `Abort.catching`-wrapped so a dead provider drops out of the vote. `consensus` (the vote itself) is pure and unit-tested |
 | `llm/LocalLlmClient`, `vision/*Client` | `< Sync` | Same |
-| `llm/CompiledPrompt.loadFromFile`/`loadFromString` | Hidden effect ⚠️ (I/O + partial) | `loadFromFile` reads a file with **no effect type at all** — not even `< Sync`. `loadFromString` throws on malformed JSON. See §2 |
+| `llm/CompiledPrompt.loadFromString` | Hidden effect ⚠️ (partial) | Throws on malformed JSON; `Main.loadCompiledPrompt` reads the classpath resource with no effect type and throws when it is missing. See §2 |
 | `llm/Reviewer.review` | `< Sync` | Correctly tracked; the `JsonValue.parse` it calls internally is where a hidden partiality lives (see above) |
 | `sightings/LocalFileSightingStore` | `< Sync` | Correctly tracked, including proper `try/finally` resource cleanup for file handles |
 | `observability/Tracing`, `MlflowTracing` | `< Sync` | `withSpan` is honest about being `< Sync`; `MlflowTracing` ends a span with `ERROR` and rethrows when the wrapped effect fails ([Integrations](1-design_integrations.md#observability)) |

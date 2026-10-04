@@ -181,8 +181,7 @@ every agency in `CachedWaterQualityClient` (the last good fetch, under `data/wat
   the newest weekly bulletin, found from the portal's index rather than pinned.
   [`ImaScPdfParser`](../local/src/main/scala/marola/water/ImaScPdfParser.scala) reads its dates and
   verdicts, which carry no coordinates, so rows are joined by beach and point name to the HTTP
-  feed's point list. Added after the feed went unreachable on 2026-09-08 while the bulletin stayed
-  up.
+  feed's point list. It covers the feed being unreachable while the bulletin is up.
 - [`IneaRjWaterQualityClient`](../local/src/main/scala/marola/water/IneaRjWaterQualityClient.scala)
   and [`InemaBaWaterQualityClient`](../local/src/main/scala/marola/water/InemaBaWaterQualityClient.scala):
   bulletin PDFs only, read by [`IneaPdfParser`](../local/src/main/scala/marola/water/IneaPdfParser.scala)
