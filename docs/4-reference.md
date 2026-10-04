@@ -67,5 +67,6 @@ limit; ip-api.com's free tier is HTTP-only and non-commercial.
 - The benchmark questions and compiled prompts, on the classpath.
 
 No jellyfish or whale API exists; those two fields come from heuristics. Telegram's Bot API is not
-called yet (Phase 1). The map's base tiles are marola-site's, set per area by `tiles` in its areas
-file.
+called yet (Phase 1). The base map and satellite layers are marola-site's
+([tile policy](https://docs.marola.dev/5-Repos/marola-site/4-reference/#tile-policy)). `tiles` is
+still required in the areas file and echoed into `data/areas.json`, but the site no longer reads it.
