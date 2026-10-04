@@ -1,10 +1,9 @@
 # Effects map
 
 A layer-by-layer map of every module's actual purity/effect status, done as part of a Scala 3/
-ergonomics review (see git history around this file's addition). The goal isn't "everything should
-be maximally effect-tracked"; it's finding the places where the *type signature lies about what
-the function actually does*, since those are the ones worth fixing regardless of how much of the
-rest gets migrated to richer Kyo effects.
+ergonomics review. The goal isn't "everything should be maximally effect-tracked"; it's finding
+the places where the *type signature lies about what the function actually does*, since those are
+the ones worth fixing regardless of how much of the rest gets migrated to richer Kyo effects.
 
 ## How to read the table
 
@@ -28,8 +27,8 @@ rest gets migrated to richer Kyo effects.
 | `beaches/BeachFinder` | `< Sync` | Composed from `Http`, correctly propagates |
 | `conditions/OpenMeteoClient` | `< Sync` | Same |
 | `water/WaterQualityMatcher`, `scoring/Swimability.waterVerdict`, `conditions/Tides`, `lore/SeaLore.pick` | Pure | MIP-0001's logic; all unit-tested |
-| `water/ImaScWaterQualityClient.samplingPoints`, `knowledge/OllamaEmbedder.embed` | `< Sync` | HTTP via `Http` |
-| `knowledge/FileKnowledgeStore` | `< Sync` | File I/O and embedding wrapped in `Sync.defer`/`Embedder`; `Corpus.chunkDocument`/`cosine` are pure |
+| `water/ImaScWaterQualityClient.samplingPoints`, `marola/knowledge/OllamaEmbedder.embed` | `< Sync` | HTTP via `Http` |
+| `marola/knowledge/FileKnowledgeStore` | `< Sync` | File I/O and embedding wrapped in `Sync.defer`/`Embedder`; `Corpus.chunkDocument`/`cosine` are pure |
 | `lore/SeaLore.loadDefault` | Hidden effect ⚠️ (minor) | Classpath read with no effect type — same class as `CompiledPrompt.loadFromFile` above |
 | `location/IpGeolocation.locate` | `< Sync` | Same; each provider call is individually `Abort.catching`-wrapped so a dead provider drops out of the vote. `consensus` (the vote itself) is pure and unit-tested |
 | `llm/LocalLlmClient`, `vision/*Client` | `< Sync` | Same |
