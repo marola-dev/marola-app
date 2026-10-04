@@ -56,7 +56,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 | `cli/` | `Main`, `AppConfig`, the MCP and chat servers, the benchmark runner, the board writer |
 | `oods/src/test/resources/` | the OODS ingest's test fixtures (MIP-0056); its code lands here too |
 | `scripts/` | the corpus fetch, the resources tarball, the `site-data` push, Scaladoc post-processing, test fixtures |
-| `docs/` | this repo's design, library and reference pages |
+| `docs/` | this repo's design, library, development and reference pages, and its ADRs (`docs/adr/`) |
 
 ## Contracts
 
@@ -70,13 +70,19 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 
 - [Effects map](docs/1-design_effects.md): each module's purity and effect status, and where a
   signature hides an effect.
+- [Libraries](docs/2-libraries.md): each library and pinned tool, why, its version, and what was
+  weighed instead.
 - [Scala 3 and JDK review](docs/2-libraries_scala3-jdk.md): what to adopt from Scala 3 and the JDK,
   and what to leave alone.
+- [Development](docs/3-development.md): testing and fixtures, images and compose profiles,
+  observability, the CI workflows, releases, secrets and cost.
 - [Data sources](docs/4-reference.md): every external API the app calls, and on what terms.
 - [API reference](docs/4-reference_api.md): the Scaladoc trees, and marola-ml's pdoc.
 - [CLI reference](docs/4-reference_cli.md): every flag and mode, the MCP tools, the chat server's
   endpoints.
 - [Configuration reference](docs/4-reference_config.md): every `MAROLA_*` variable, and choosing
   the embedder.
+- [ADR-0001](docs/adr/0001-three-sbt-modules.md): why the build is three sbt modules, core, local
+  and cli.
 - [AGENTS.md](https://github.com/marola-dev/marola-app/blob/main/AGENTS.md): what this repo is and
   where it differs from the umbrella's rules.
