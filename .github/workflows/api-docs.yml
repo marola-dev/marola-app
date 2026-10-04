@@ -1,8 +1,7 @@
 name: api docs
 
 # `just api-docs`'s Scaladoc: a check on a PR, force-pushed to the `api-docs` branch from `main`,
-# which the umbrella mounts (MIP-0074 §5.2). release.yml's api-docs.tar.gz stays until the umbrella
-# reads the branch.
+# which the umbrella mounts (MIP-0074 §5.2).
 
 on:
   pull_request:
