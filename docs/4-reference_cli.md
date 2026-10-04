@@ -121,7 +121,7 @@ answers any origin (`Access-Control-Allow-Origin: *`).
 
 `answer` carries the emergency footer when `safety` is true, that is when a retrieved passage came
 from the corpus's safety documents (MIP-0022). Exposing the server through a Cloudflare Tunnel and
-connecting the widget is in [Run it locally](https://docs.marola.dev/1-Using-marola/RUN-LOCALLY/).
+connecting the widget is in [Chat and MCP](https://docs.marola.dev/1-Using-marola/CHAT-AND-MCP/).
 
 ## MCP server
 

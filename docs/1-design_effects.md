@@ -35,7 +35,7 @@ the ones worth fixing regardless of how much of the rest gets migrated to richer
 | `llm/CompiledPrompt.loadFromFile`/`loadFromString` | Hidden effect ⚠️ (I/O + partial) | `loadFromFile` reads a file with **no effect type at all** — not even `< Sync`. `loadFromString` throws on malformed JSON. See §2 |
 | `llm/Reviewer.review` | `< Sync` | Correctly tracked; the `JsonValue.parse` it calls internally is where a hidden partiality lives (see above) |
 | `sightings/LocalFileSightingStore` | `< Sync` | Correctly tracked, including proper `try/finally` resource cleanup for file handles |
-| `observability/Telemetry` | `< Sync` (shallow) | `withSpan` is honest about being `< Sync`, but see `ARCHITECTURE.md` §5f's own documented gap: no try/finally around the wrapped effect, so a thrown exception mid-span leaves it unclosed |
+| `observability/Tracing`, `MlflowTracing` | `< Sync` | `withSpan` is honest about being `< Sync`; `MlflowTracing` ends a span with `ERROR` and rethrows when the wrapped effect fails ([Integrations](1-design_integrations.md#observability)) |
 | `AppConfig.fromEnv` | **Hidden effect ⚠️** | See §2 — the single most consequential finding here |
 | `agent/SwimConditionsMcpServer` | Unsafe boundary (contained) | See §3 |
 | `Recommender.traverse`/`traverseSingle`, `Main.printLines` | Pure control flow over `< Sync` values | Hand-rolled recursion, not stack-safe for very large lists — a non-issue at marola's actual list sizes (a handful of beaches), worth knowing if that ever changes |
@@ -102,9 +102,9 @@ SDK's tool-handler API (`BiFunction<Exchange, CallToolRequest, CallToolResult>`)
 synchronous Java callback, not a Kyo-aware one, so there's no way to hand it a `< Sync` value
 without unwrapping it first. This is the *correct* place for `AllowUnsafe`: a foreign-callback
 boundary, contained to one file, with the reason documented right there in the code and again in
-`ARCHITECTURE.md` §5c. Not a finding to fix; a pattern to recognize as legitimate when it shows up
-elsewhere for the same reason (a future Telegram SDK's callback API, if it turns out to have the
-same shape).
+[Integrations](1-design_integrations.md#agentic-tool-access). Not a finding to fix; a pattern to
+recognize as legitimate when it shows up elsewhere for the same reason (a future Telegram SDK's
+callback API, if it turns out to have the same shape).
 
 ## 4. Resource lifecycle — not yet a problem, but worth naming
 
@@ -122,6 +122,6 @@ fully encapsulated in a private class). The gap is specifically the FP-purity se
 (`AppConfig.fromEnv`) whose type signature hides that it does I/O, and a handful of functions that
 can throw without saying so in their type. Both are real, both are fixable with Kyo's own `Env`/
 `Abort` effects, and neither is urgent enough to have blocked shipping the features this review
-accompanied. Captured here as the concrete next step for whoever picks up
-`FUTURE-WORK.md` §2's kyo-http/kyo-schema migration, since that's the natural moment to also
-tighten these two effect boundaries.
+accompanied. Captured here as the concrete next step for whoever picks up the
+[kyo-http/kyo-schema migration](2-libraries.md#kyo-http-and-kyo-schema), since that's the natural
+moment to also tighten these two effect boundaries.

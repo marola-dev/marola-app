@@ -192,7 +192,8 @@ written.
 - **Kyo is pre-1.0** (currently `1.0.0-RC7`) with no version-specific published docs; when unsure
   of an API, verify against the actual jar (`javap` on the decompiled class) rather than guessing
   from `getkyo.io`'s latest-version docs, which can silently drift from what's pinned. See
-  the umbrella's `docs/4-Research-and-plans/FUTURE-WORK.md` §2-3 and `docs/1-design_effects.md` for examples of this verification approach.
+  `docs/2-libraries.md` (Reviewed, not adopted) and `docs/1-design_effects.md` for examples of
+  this verification approach.
 - **JDK 25 is required, not just "17+".** Scala 3.9 itself only needs JDK 17+, but Kyo 1.0.0-RC7
   compiles with `-release 25` and its artifacts won't load on an older JVM. This already broke a
   real build with `UnsupportedClassVersionError` on a JDK-24 runtime. `flake.nix` pins JDK 25. If
