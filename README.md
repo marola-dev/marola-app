@@ -72,6 +72,11 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
   signature hides an effect.
 - [Scala 3 and JDK review](docs/2-libraries_scala3-jdk.md): what to adopt from Scala 3 and the JDK,
   and what to leave alone.
+- [Data sources](docs/4-reference.md): every external API the app calls, and on what terms.
 - [API reference](docs/4-reference_api.md): the Scaladoc trees, and marola-ml's pdoc.
+- [CLI reference](docs/4-reference_cli.md): every flag and mode, the MCP tools, the chat server's
+  endpoints.
+- [Configuration reference](docs/4-reference_config.md): every `MAROLA_*` variable, and choosing
+  the embedder.
 - [AGENTS.md](https://github.com/marola-dev/marola-app/blob/main/AGENTS.md): what this repo is and
   where it differs from the umbrella's rules.
