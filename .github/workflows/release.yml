@@ -1,11 +1,8 @@
 name: release
 
-# A v* tag publishes the app's two release assets (MIP-0070 §5.4, §5.5):
-#   api-docs.tar.gz              Scaladoc, scala/{core,local,cli}/: the umbrella's fetch-api-docs.sh
-#                                unpacks the latest release's under docs.marola.dev/api/
-#   ml-resources-<tag>.tar.gz    the resources marola-ml pins in its resources.version
-# A tag's assets are immutable: a re-run that finds one already attached fails rather than replace
-# what a consumer has fetched (no --clobber).
+# A v* tag publishes ml-resources-<tag>.tar.gz, the resources marola-ml pins in its
+# resources.version (MIP-0070 §5.4). A tag's asset is immutable: a re-run that finds it already
+# attached fails rather than replace what a consumer has fetched (no --clobber).
 
 on:
   push:
@@ -16,61 +13,27 @@ permissions: {}
 jobs:
   assets:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-          cache: sbt
-      - uses: sbt/setup-sbt@v1
-
-      - name: scaladoc, one tree per module
-        run: |
-          set -euo pipefail
-          sbt core/doc local/doc cli/doc
-          for m in core local cli; do
-            mkdir -p out/api/scala/"$m"
-            cp -r "$m"/target/scala-*/api/. out/api/scala/"$m"/
-          done
-
-      # docs.marola.dev serves script-src 'self'; the umbrella's docs build checks it again.
-      - name: strip third-party scripts
-        run: |
-          set -euo pipefail
-          python3 scripts/strip_external_scripts.py out/api/scala
-          python3 scripts/strip_external_scripts.py --check out/api
-
-      - name: build the assets
+      - name: build the asset
         env:
           TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          mkdir -p .tmp
-          tar -czf .tmp/api-docs.tar.gz -C out/api .
-          scripts/build-resources-tarball.sh ".tmp/ml-resources-$TAG.tar.gz"
+        run: scripts/build-resources-tarball.sh ".tmp/ml-resources-$TAG.tar.gz"
 
-      - name: attach them to the release
+      - name: attach it to the release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          files=(.tmp/api-docs.tar.gz ".tmp/ml-resources-$TAG.tar.gz")
+          file=".tmp/ml-resources-$TAG.tar.gz"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${files[@]}"
+            gh release upload "$TAG" "$file"
           else
-            gh release create "$TAG" "${files[@]}" --verify-tag --title "marola-app $TAG" \
-              --notes "Scaladoc (api-docs.tar.gz) and the ml resources tarball at $TAG."
+            gh release create "$TAG" "$file" --verify-tag --title "marola-app $TAG" \
+              --notes "The ml resources tarball at $TAG."
           fi
-
-  # The umbrella rebuilds docs.marola.dev, which fetches this release's api-docs.tar.gz.
-  notify:
-    needs: assets
-    uses: marola-dev/marola-devkit/.github/workflows/notify-umbrella.yml@v0.3.0
-    secrets:
-      token: ${{ secrets.MAROLA_CROSS_REPO_PAT }}

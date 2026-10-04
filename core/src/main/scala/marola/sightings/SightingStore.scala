@@ -3,9 +3,8 @@ package marola.sightings
 import kyo.*
 
 /**
- * Where user-reported jellyfish/whale sightings go — the missing piece for the calibration feedback
- * loop `ARCHITECTURE.md` §8 describes ("let users report sightings back... accumulate that as real
- * labeled data").
+ * Where user-reported jellyfish/whale sightings go: the collection half of the heuristics'
+ * calibration loop (`docs/1-design_heuristics.md`).
  */
 trait SightingStore:
   def record(sighting: Sighting): Unit < Sync

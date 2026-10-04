@@ -1,7 +1,7 @@
 # Scala 3 and JDK review
 
 What the codebase already uses well, what it should adopt, and what to leave alone, judged
-against *this* code (Scala 3.9 LTS, Kyo 1.0.0-RC5, JDK 25), not a generic feature list. Each row
+against *this* code (Scala 3.9 LTS, Kyo 1.0.0-RC7, JDK 25), not a generic feature list. Each row
 names where it would land. "Adopt" items are ordered by payoff-for-effort; the first three are
 worth a PR each.
 
@@ -35,7 +35,7 @@ object units:
 ```
 
 Land in `core/model/Units.scala`; migrate `Beach`, `HourlyConditions`, `BestHour.score`,
-`Recommender.radiusKm`. Pair with Iron refinements (`FUTURE-WORK.md` §6) for the 0-100 and
+`Recommender.radiusKm`. Pair with Iron refinements ([Libraries](2-libraries.md#neotypes-and-iron)) for the 0-100 and
 lat/lon ranges once the aliases exist.
 
 ### 2.2 Sum types instead of flag-bags
@@ -95,8 +95,8 @@ def bestPerBeachTomorrow(...)(using clock: Clock): ...
 ```
 
 Tests supply `given Clock = _ => LocalDate.of(2026, 9, 5)`. The same pattern replaces
-`AppConfig.fromEnv` being called ad hoc (`EFFECTS-MAP.md` §2): `using config: AppConfig`, or Kyo's
-`Env[AppConfig]`, read once at the `KyoApp` boundary.
+`AppConfig.fromEnv` being called ad hoc ([effects map](1-design_effects.md) §2):
+`using config: AppConfig`, or Kyo's `Env[AppConfig]`, read once at the `KyoApp` boundary.
 
 ### 2.6 Extension methods on foreign types
 

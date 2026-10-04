@@ -1,8 +1,7 @@
 name: api docs
 
 # `just api-docs`'s Scaladoc: a check on a PR, force-pushed to the `api-docs` branch from `main`,
-# which the umbrella mounts (MIP-0074 §5.2). release.yml's api-docs.tar.gz stays until the umbrella
-# reads the branch.
+# which the umbrella mounts (MIP-0074 §5.2).
 
 on:
   pull_request:
@@ -13,9 +12,9 @@ permissions: {}
 
 jobs:
   api-docs:
-    uses: marola-dev/marola-devkit/.github/workflows/api-docs.yml@v0.3.0
+    uses: marola-dev/marola-devkit/.github/workflows/api-docs.yml@v0.4.1
     # A called workflow's jobs can never exceed this; only its publish job writes.
     permissions:
       contents: write
     with:
-      devkit-ref: v0.3.0
+      devkit-ref: v0.4.1
