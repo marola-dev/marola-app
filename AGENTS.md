@@ -31,10 +31,10 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
   aggregate with no source of its own).
 - `oods/src/test/resources/`: the OODS ingest's test fixtures (MIP-0056); its code lands here too.
 - `README.md` (the landing) and `docs/`: this repo's numbered pages (`1-design*`, `2-libraries*`,
-  `4-reference*`), mounted by the umbrella at docs.marola.dev/5-Repos/marola-app/ (MIP-0074 §5.2).
-  Links stay relative inside the repo and use absolute `https://docs.marola.dev/…` URLs for the
-  umbrella's pages; user and system pages (Run it locally, Telegram setup, Architecture) live
-  there.
+  `3-development`, `4-reference*`) and ADRs (`docs/adr/`), mounted by the umbrella at
+  docs.marola.dev/5-Repos/marola-app/ (MIP-0074 §5.2). Links stay relative inside the repo and use
+  absolute `https://docs.marola.dev/…` URLs for the umbrella's pages; user and system pages (Run
+  it locally, Telegram setup, Architecture) live there.
 
 ## What it consumes and produces
 

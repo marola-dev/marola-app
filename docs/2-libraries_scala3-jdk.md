@@ -1,7 +1,7 @@
 # Scala 3 and JDK review
 
 What the codebase already uses well, what it should adopt, and what to leave alone, judged
-against *this* code (Scala 3.9 LTS, Kyo 1.0.0-RC5, JDK 25), not a generic feature list. Each row
+against *this* code (Scala 3.9 LTS, Kyo 1.0.0-RC7, JDK 25), not a generic feature list. Each row
 names where it would land. "Adopt" items are ordered by payoff-for-effort; the first three are
 worth a PR each.
 
