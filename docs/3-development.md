@@ -58,9 +58,11 @@ variables are listed in [Data sources](4-reference.md#sea-and-weather-open-meteo
 
 ### Parser and site fixtures
 
-- `local/src/test/resources/`: the agencies' bulletins as published, PDFs and HTML pages for IMA/SC,
-  INEA/RJ and INEMA/BA, each named for its date, read by the `*PdfParserSpec` and
-  `*WaterQualityClientSpec` suites. A new bulletin layout gets a new file beside the old ones.
+- `local/src/test/resources/`: the agencies' publications as captured, mostly bulletin PDFs and
+  HTML pages for IMA/SC, INEA/RJ and INEMA/BA, plus IMA's map JSON (`ima-mapa-sample.json`). Most
+  are named for their date (`inea-boletim-niteroi-2026-09-24.pdf`); INEMA's for its bulletin number
+  (`inema-boletim-salvador-13-2025.pdf`). The `*PdfParserSpec` and `*WaterQualityClientSpec` suites
+  read them. A new bulletin layout gets a new file beside the old ones.
 - `core/src/test/resources/fixtures/`: Overpass responses for facilities (`AccessibilitySpec`) and
   trails (`TrailFinderSpec`).
 - `cli/src/test/resources/site/`: `areas.json` and `board.json` for `BoardSpec` and
@@ -236,6 +238,7 @@ Locally, secrets go in the gitignored `.env`, never in code: direnv's `.envrc` a
 
 Nothing here provisions a paid resource. The repo is public, so the hosted runners are free, and a
 public package's GHCR storage is free too (MIP-0065 §4.4). The `-<sha>` tags accumulate on every
-qualifying push and nothing prunes them. The heaviest jobs are the daily smoke test and the
+qualifying push and nothing prunes them; until the package is made public, they count against the
+private-package storage quota. The heaviest jobs are the daily smoke test and the
 `native` build; both cache what they can (the Ollama model, the GHA build cache). A cloud
 deployment is Phase 2 (MIP-0057) and needs a human's go-ahead with its expected cost first.
