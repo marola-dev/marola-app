@@ -86,7 +86,7 @@ object Http:
         case Left(failure) => throw failure
     loop(0)
 
-  private def userAgent = "marola/0.1 (+https://github.com/h0ffmann/marola)"
+  private def userAgent = "marola/0.1 (+https://github.com/marola-dev/marola-app)"
 
   private def request(
       url: String,
