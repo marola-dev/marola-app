@@ -55,6 +55,24 @@ class ImaScWaterQualityClientSpec extends munit.FunSuite:
     assertEquals(parsed.head.latest.flatMap(_.enterococciPer100ml), None)
   }
 
+  test("the 2026-10 feed shape (no ANALISES) yields no points, so the PDF backup runs (#57)") {
+    val json = JsonValue.parse(
+      """[{"CODIGO":"288c4fae-5e1e-4469-b945-1ffae1febcd6","MUNICIPIO_COD_IBGE":"4205407","MUNICIPIO":"Florianópolis",
+           "PONTO_NOME":"Ponto 95","BALNEARIO":"Beira-Mar Norte","LOCALIZACAO":"Em frente à Praça Esteves Júnior",
+           "LATITUDE":"-27.58","LONGITUDE":"-48.55","CONDICAO":"IMPRÓPRIO"}]"""
+    )
+    assertEquals(ImaScWaterQualityClient.parse(json), Nil)
+  }
+
+  test("a point with no dated sample is dropped; one with samples is kept") {
+    val json = JsonValue.parse(
+      """[{"CODIGO":"1","BALNEARIO":"X","PONTO_NOME":"P","LOCALIZACAO":"","LATITUDE":"-27.5","LONGITUDE":"-48.5","ANALISES":[]},
+         {"CODIGO":"2","BALNEARIO":"Y","PONTO_NOME":"Q","LOCALIZACAO":"","LATITUDE":"-27.5","LONGITUDE":"-48.5",
+          "ANALISES":[{"DATA":"01/09/2026","CONDICAO":"PRÓPRIA"}]}]"""
+    )
+    assertEquals(ImaScWaterQualityClient.parse(json).map(_.id), List("2"))
+  }
+
   test("coversOrigin: Campeche yes, Rio no") {
     assert(ImaScWaterQualityClient.coversOrigin(Coordinates(-27.6733, -48.4700)))
     assert(!ImaScWaterQualityClient.coversOrigin(Coordinates(-22.9878, -43.1913)))

@@ -37,7 +37,7 @@ Each agency publishes its own state's samples, so the provider follows the origi
 
 | Agency | Covers (lat, lon) | Source |
 |---|---|---|
-| IMA/SC | −29.4 to −25.9, −53.9 to −48.3 | `POST https://balneabilidade.ima.sc.gov.br/relatorio/mapa`, the JSON the portal's map uses: every point with its last samples. When it gives nothing, the newest weekly bulletin, `http://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/<date>`, found from the portal's index and joined by beach and point name with the coordinates of the same feed over plain HTTP, which carries no samples |
+| IMA/SC | −29.4 to −25.9, −53.9 to −48.3 | `POST https://balneabilidade.ima.sc.gov.br/relatorio/mapa`, the JSON the portal's map uses: every point with its last samples (points without a dated sample are dropped; since 2026-10 the feed sends none, #57). When it gives nothing, the newest weekly bulletin, `https://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/<date>`, found from the portal's index and joined by beach and point name with the feed's coordinates |
 | INEMA/BA | −18.5 to −8.5, −40.5 to −37.0 | The bulletin PDF at `http://balneabilidade.inema.ba.gov.br/index.php/relatoriodebalneabilidade/geraBoletim?idcampanha=83453`, placed with the bundled `sampling_points_ba.json` |
 | INEA/RJ | −23.4 to −21.0, −44.9 to −40.9 | The latest PDF per zone, found on `https://www.inea.rj.gov.br/rio-de-janeiro/` and `https://www.inea.rj.gov.br/niteroi/`, placed with the bundled `sampling_points_rj.json` |
 

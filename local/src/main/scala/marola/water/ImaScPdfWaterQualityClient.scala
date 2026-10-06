@@ -13,9 +13,8 @@ import marola.model.Coordinates
  * IMA/SC from the weekly bulletin PDF, for when the JSON feed is unreachable.
  *
  * Two sources, each useless alone. The PDF has a collection date and a verdict per point but no
- * coordinates; the HTTP JSON has coordinates for all 260 points but, unlike the HTTPS one, no
- * samples at all. Joined on the beach and point names they reconstruct what the HTTPS feed used to
- * return in one call.
+ * coordinates; the JSON has coordinates for every point but, since 2026-10, no dated samples (#57).
+ * Joined on the beach and point names they reconstruct what the feed used to return in one call.
  *
  * The bulletin URL is discovered from the portal's index rather than hardcoded — the mistake that
  * left Rio pinned to a June PDF until its samples aged past the 45-day rule and the area went dark
@@ -47,8 +46,8 @@ object ImaScPdfWaterQualityClient:
 
   private val log = Log.forName(getClass.getName)
 
-  val DefaultIndexUrl = "http://balneabilidade.ima.sc.gov.br/"
-  val DefaultPointsUrl = "http://balneabilidade.ima.sc.gov.br/relatorio/mapa"
+  val DefaultIndexUrl = "https://balneabilidade.ima.sc.gov.br/"
+  val DefaultPointsUrl = "https://balneabilidade.ima.sc.gov.br/relatorio/mapa"
 
   private val BulletinLink = """/relatorio/downloadPDF/(\d{4}-\d{2}-\d{2})""".r
 
@@ -61,7 +60,7 @@ object ImaScPdfWaterQualityClient:
       .distinct
       .sorted
       .lastOption
-      .map(d => s"http://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/$d")
+      .map(d => s"https://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/$d")
 
   /**
    * Accent- and case-insensitive, because the PDF shouts ("PRAIA DO CAMPECHE") and the JSON does

@@ -41,8 +41,13 @@ object ImaScWaterQualityClient:
   private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   /** Pure; unit-tested on a trimmed real payload (`ImaScWaterQualityClientSpec`). */
+  /**
+   * A point without a dated sample is dropped: since 2026-10 the feed sends no `ANALISES` (#57),
+   * and 337 sample-less points would otherwise keep `FallbackWaterQualityClient` from trying the
+   * PDF.
+   */
   def parse(json: JsonValue): List[SamplingPoint] =
-    json.arr.toList.flatMap(parsePoint)
+    json.arr.toList.flatMap(parsePoint).filter(_.samples.nonEmpty)
 
   // The feed sends numbers as strings ("-27.4261029", "197"); tolerate real numbers too.
   private def text(v: JsonValue): Option[String] =
