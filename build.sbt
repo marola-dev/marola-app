@@ -2,7 +2,8 @@
 // JVM running sbt and the runtime executing the jar must be 25+ (flake.nix and the Dockerfile pin
 // it). An older JVM fails with `UnsupportedClassVersionError: kyo/Frame$package$Frame$`.
 //
-// Modules: core (pure pipeline), local (Ollama path), cli (wires them together).
+// Modules: core (pure pipeline), local (Ollama path), oods (the OODS ingest, MIP-0075), cli (wires
+// them together).
 
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
@@ -94,8 +95,18 @@ lazy val local = (project in file("local"))
     )
   )
 
+// The Open Ocean Data Store ingest (MIP-0056, MIP-0075): its own main class, `marola.oods.Main`,
+// shipped in cli's one assembly through `cli dependsOn oods`. DuckDB is declared here only.
+lazy val oods = (project in file("oods"))
+  .dependsOn(local)
+  .settings(baseSettings)
+  .settings(
+    name := "marola-oods",
+    libraryDependencies += "org.duckdb" % "duckdb_jdbc" % "1.5.6.0"
+  )
+
 lazy val cli = (project in file("cli"))
-  .dependsOn(core, local)
+  .dependsOn(core, local, oods)
   .enablePlugins(NativeImagePlugin)
   .settings(baseSettings)
   .settings(
@@ -131,7 +142,7 @@ lazy val corpusFetch =
   taskKey[Unit]("scripts/corpus-fetch.sh: corpus.version's release into .tmp/knowledge")
 
 lazy val root = (project in file("."))
-  .aggregate(core, local, cli)
+  .aggregate(core, local, oods, cli)
   .settings(
     name := "marola",
     publish / skip := true,

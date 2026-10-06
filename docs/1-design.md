@@ -1,27 +1,32 @@
 # Design
 
-How marola-app is put together: three sbt modules, the pipeline that answers "what's the best hour
+How marola-app is put together: four sbt modules, the pipeline that answers "what's the best hour
 tomorrow to swim nearby?", the two places it uses AI and why they stay apart, and where the effect
 boundary sits. The siblings go deeper: [Effects map](1-design_effects.md) (what is pure, what is
 `< Sync`), [Heuristics](1-design_heuristics.md) (the scoring internals) and
 [Integrations](1-design_integrations.md) (each pluggable backend). How marola fits with the other
 repos is the umbrella's [Architecture](https://docs.marola.dev/2-Building-marola/ARCHITECTURE/).
 
-## Three modules
+## Modules
 
 Traits live in `core`, `local` implements them, and `cli` is the one place that wires both
-together ([ADR-0001](adr/0001-three-sbt-modules.md) has why).
+together ([ADR-0001](adr/0001-three-sbt-modules.md) has why). `oods`, the Open Ocean Data Store
+ingest (MIP-0075), is the fourth: it builds on `local`, is the only module with DuckDB, and its
+`marola.oods.Main` ships in `cli`'s assembly as a second entry point.
 
 ```d2
 direction: right
 core: "core/\npure pipeline, traits"
 local: "local/\nOllama, MLflow, agency and file impls"
 cli: "cli/\nMain, AppConfig, the servers"
+oods: "oods/\nthe OODS ingest, DuckDB"
 ml: "marola-ml\noffline DSPy compile"
 
 local -> core: "implements the traits\n(LlmClient, VisionClient,\nSightingStore, ...)"
 cli -> core: "depends on"
 cli -> local: "depends on,\nwires via AppConfig"
+oods -> local: "depends on"
+cli -> oods: "ships oods.Main\nin the one jar"
 ml -> core: "compiled prompts\n(a PR into resources)"
 ```
 
@@ -31,7 +36,7 @@ reading its tree.
 
 ## Module map
 
-Every source, regenerated from `find core local cli -name '*.scala'`: the main sources by
+Every source, regenerated from `find core local oods cli -name '*.scala'`: the main sources by
 package, then the tests.
 
 ```
@@ -128,6 +133,9 @@ cli/src/main/scala/marola
     OceanBenchmark.scala           --benchmark: 22 questions, three arms
   site
     SiteBuilder.scala              --site: the boards for every area of an --areas file
+
+oods/src/main/scala/marola/oods
+  Main.scala                       the oods CLI (MIP-0075 §5.4): usage and exit codes; no command yet
 ```
 
 The tests, one spec per class or concern:
@@ -162,6 +170,9 @@ cli/src/test/scala/marola
   agent         ChatServerSpec
   bench         BenchmarkLedgerSpec
   site          BoardSpec, SiteBuilderSpec
+
+oods/src/test/scala/marola/oods
+  MainSpec
 ```
 
 ## The pipeline

@@ -29,7 +29,9 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 - `cli/`: `Main`, `AppConfig` (settings from env vars), the MCP tool server, the benchmark runner,
   `--site`'s board writer. Use `sbt cli/run` / `cli/runMain …`, not `sbt run` at the root (a pure
   aggregate with no source of its own).
-- `oods/src/test/resources/`: the OODS ingest's test fixtures (MIP-0056); its code lands here too.
+- `oods/`: the Open Ocean Data Store ingest (MIP-0056, MIP-0075), `dependsOn(local)`, the only
+  module with DuckDB. Its `marola.oods.Main` ships in `cli`'s assembly (`cli` depends on `oods`);
+  `oods/src/test/resources/` holds its fixtures.
 - `README.md` (the landing) and `docs/`: this repo's numbered pages (`1-design*`, `2-libraries*`,
   `3-development`, `4-reference*`) and ADRs (`docs/adr/`), mounted by the umbrella at
   docs.marola.dev/5-Repos/marola-app/ (MIP-0074 §5.2). Links stay relative inside the repo and use

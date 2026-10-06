@@ -74,8 +74,9 @@ variables are listed in [Data sources](4-reference.md#sea-and-weather-open-meteo
 
 `oods/src/test/resources/ima-sc/` holds the Open Ocean Data Store ingest's fixtures (MIP-0056):
 IMA/SC's portal index, its municipality, beach and point lists, per-year CSV exports (including a
-header-only file and a year with no records), an old bulletin PDF and a Wayback CDX listing. `oods/`
-is not an sbt module yet and no test reads these files; the ingest code lands beside them.
+header-only file and a year with no records), an old bulletin PDF and a Wayback CDX listing. `oods`
+is an sbt module (MIP-0075) whose only test so far, `MainSpec`, reads none of them; the ingest code
+that does lands beside them.
 
 ### E2E
 

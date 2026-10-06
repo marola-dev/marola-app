@@ -54,7 +54,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 | `core/` | the pure pipeline, the shared HTTP/JSON helpers, the `LlmClient` / `VisionClient` / `SightingStore` traits |
 | `local/` | the Ollama-backed implementations and the local-file sighting store |
 | `cli/` | `Main`, `AppConfig`, the MCP and chat servers, the benchmark runner, the board writer |
-| `oods/src/test/resources/` | the OODS ingest's test fixtures (MIP-0056); its code lands here too |
+| `oods/` | the Open Ocean Data Store ingest (MIP-0075): `marola.oods.Main`, shipped in the same jar, and its fixtures under `oods/src/test/resources/` |
 | `scripts/` | the corpus fetch, the resources tarball, the `site-data` push, Scaladoc post-processing, test fixtures |
 | `docs/` | this repo's design, library, development and reference pages, and its ADRs (`docs/adr/`) |
 
@@ -68,7 +68,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 
 ## Docs and AGENTS.md
 
-- [Design](docs/1-design.md): the three modules, the module map, the pipeline, and why the map
+- [Design](docs/1-design.md): the four modules, the module map, the pipeline, and why the map
   is deterministic while the chat is generative.
 - [Heuristics](docs/1-design_heuristics.md): the score's deductions, the jellyfish and whale
   heuristics, the water verdict, tides and sea lore.
