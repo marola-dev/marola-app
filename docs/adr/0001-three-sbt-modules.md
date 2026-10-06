@@ -45,6 +45,8 @@ settings. A module for the Telegram bot is added when that code exists (Phase 1)
   bare `sbt run` at the root has nothing to run.
 - `cli` carries two main classes, `marola.Main` and `SwimConditionsMcpServer`, so `build.sbt` pins
   `Main` for `run` and `assembly`; the native binary runs `Main` only.
+- Later: MIP-0075 added a fourth module, `oods` (the OODS ingest, `dependsOn(local)`, DuckDB), and
+  `cli` depends on it so its `marola.oods.Main` ships in the same assembly.
 - Verified after the split, not only compiled: `sbt test` across the module boundaries, `cli/run`
   with and without `--summarize` against live Overpass, Open-Meteo and Ollama, both `E2ESpec`
   tests, and the assembled jar.

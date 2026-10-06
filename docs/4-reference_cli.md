@@ -1,12 +1,14 @@
 # CLI reference
 
-The `cli` jar has two entry points (`build.sbt`):
+The `cli` jar has three entry points (`build.sbt`):
 
 - `marola.Main`, the CLI: `just run -- <flags>`, `java -jar` on the assembled jar, or the image
   (`ENTRYPOINT java -jar /app/marola.jar`, default arguments `--brief`).
 - `marola.agent.SwimConditionsMcpServer`, the [MCP tool server](#mcp-server): `just mcp-server`.
+- `marola.oods.Main`, the [OODS ingest](#oods-ingest) (from the `oods` module):
+  `java -cp <the assembled jar> marola.oods.Main <command>`.
 
-Both read their settings from `MAROLA_*` environment variables: see
+The first two read their settings from `MAROLA_*` environment variables: see
 [Configuration reference](4-reference_config.md). How to set up Ollama and run it for the first
 time is [Run it locally](https://docs.marola.dev/1-Using-marola/RUN-LOCALLY/).
 
@@ -146,3 +148,23 @@ its description still says Santa Catarina only.
     `null`; ask `get_water_quality` for it. `ask_ocean_question` and the chat server's `/ask`
     answer with the strict fallback and a minimum score of 0, whatever `MAROLA_ASK_FALLBACK` and
     `MAROLA_ASK_MIN_SCORE` say: only `--ask` and `--benchmark` read them.
+
+## OODS ingest
+
+`marola.oods.Main` is the Open Ocean Data Store's command line (MIP-0075 §5.4). Its commands:
+
+```
+oods beaches --areas FILE [--area ID]… [--dry-run]
+oods load (--state UF | --source ID)… --sources FILE [--water-positions FILE] [--mode incremental|backfill] [--from-year Y] [--to-year Y] [--max-minutes M] [--dry-run]
+oods maintain [--keep-days 30]
+oods export [--water-positions FILE]
+oods check
+oods status [--area ID | --state UF]
+```
+
+None is implemented yet: each exits 2 with "not implemented yet", and no command or an unknown one
+exits 2 with the usage on stderr. The exit codes once they land: 0 every job ended without
+`failed`, 1 at least one `failed`, 2 usage or a missing setting, 3 `oods check` found a violation
+or the catalog will not open. Settings come from `OODS_S3_KEY_ID`, `OODS_S3_SECRET`,
+`OODS_S3_ENDPOINT`, `OODS_S3_REGION`, `OODS_S3_URL_STYLE`, `OODS_S3_USE_SSL`, `OODS_BUCKET`,
+`OODS_CATALOG`, `OODS_KEY_NAME` and `MAROLA_BR_PROXY`.
