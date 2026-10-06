@@ -189,7 +189,7 @@ every agency in `CachedWaterQualityClient` (the last good fetch, under `data/wat
   and [`InemaPdfParser`](../local/src/main/scala/marola/water/InemaPdfParser.scala), placed with
   hand-curated coordinate tables
   ([`SamplingPointCoordinates`](../local/src/main/scala/marola/water/SamplingPointCoordinates.scala)).
-  INEA's PDFs are found on its city pages; INEMA's URL pins one campaign.
+  INEA's PDFs are found on its city pages, INEMA's on its listing page, each dated by its file name.
 - [`PdfLines`](../local/src/main/scala/marola/water/PdfLines.scala) keeps each line's position:
   read in natural order these tables pair a verdict with the wrong beach, which for a safety verdict
   is a wrong answer, not a formatting bug.
