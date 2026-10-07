@@ -1,6 +1,6 @@
 package marola.water
 
-import java.net.URLDecoder
+import java.net.{URI, URLDecoder}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.{LocalDate, ZoneId}
 
@@ -28,7 +28,7 @@ final class InemaBaWaterQualityClient(
   def samplingPoints: List[SamplingPoint] < Sync =
     orNothing(listingPage) {
       Http.getString(listingPage).map { html =>
-        val found = bulletins(html)
+        val found = bulletins(html, listingPage)
         if found.isEmpty then log.warn(s"INEMA: no dated bulletin link on $listingPage")
         val (current, stale) = found.partition(b => WaterQuality.isFresh(b.date, today()))
         stale.foreach(b => log.info(s"INEMA: skipping ${b.url}, dated ${b.date}, past 45 days"))
@@ -62,10 +62,11 @@ object InemaBaWaterQualityClient:
   // `... emitido em (02_10_2026).pdf`, and older uploads like `Boletim_Salvador_05_06_2026.pdf`.
   private val IssueDate = """(\d{2})_(\d{2})_(\d{4})""".r
 
-  def bulletins(pageHtml: String): List[Bulletin] =
+  // The page links its PDFs by path (`/inema/sites/...`), so each href resolves against it.
+  def bulletins(pageHtml: String, pageUrl: String = ListingPage): List[Bulletin] =
     PdfLink
       .findAllMatchIn(pageHtml)
-      .map(_.group(1))
+      .flatMap(m => Try(URI.create(pageUrl).resolve(m.group(1)).toString).toOption)
       .flatMap { url =>
         val name = Try(URLDecoder.decode(url, UTF_8)).getOrElse(url)
         IssueDate.findAllMatchIn(name).toList.lastOption.flatMap { m =>
