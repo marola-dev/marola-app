@@ -143,7 +143,10 @@ lazy val experiment = (project in file("experiment"))
     libraryDependencies ++= Seq(
       "io.getkyo" %% "kyo-schema"      % kyoVersion,
       "io.getkyo" %% "kyo-schema-json" % kyoVersion,
-      "io.getkyo" %% "kyo-config"      % kyoVersion
+      "io.getkyo" %% "kyo-config"      % kyoVersion,
+      // The lake's engine (MIP-0083 §5.6, MIP-0075 §4.5); `ducklake` is a DuckDB extension it
+      // downloads on first LOAD, not a jar.
+      "org.duckdb" % "duckdb_jdbc" % "1.5.6.0"
     )
   )
 
