@@ -187,3 +187,8 @@ mlflow-up:
 
 mlflow-down:
     docker compose --profile mlflow down
+
+# The forecast benchmark's Besom program (MIP-0083 §5.9) compiles; `pulumi up` is the owner's, by
+# hand (infra/forecast-benchmark/README.md).
+infra-compile:
+    scala-cli compile infra/forecast-benchmark
