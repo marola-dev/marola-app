@@ -21,11 +21,11 @@ is the [Scala 3 and JDK review](2-libraries_scala3-jdk.md).
 | Library | Version | Module | Why | Alternatives |
 |---|---|---|---|---|
 | Kyo: `kyo-core`, `kyo-direct`, `kyo-combinators` | 1.0.0-RC7 | all | The effect system at the I/O boundary (`Sync`, `Async`, `Abort`); `kyo-direct` for the direct-style syntax. Pre-1.0 with no version-specific docs, so the pinned jar is the reference (`.claude/agents/jar-verifier.md`) | Every other RC7 module was reviewed: [Kyo modules at 1.0.0-RC7](#kyo-modules-at-100-rc7) |
-| Kyo: `kyo-schema-json` (all), `kyo-mcp` (cli) | 1.0.0-RC7 | all, cli | On the classpath ahead of [MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)'s tasks; nothing imports them yet. They pull `kyo-schema` and `kyo-jsonrpc` | — |
+| Kyo: `kyo-schema-json` (all), `kyo-mcp` (cli) | 1.0.0-RC7 | all, cli | On the classpath ahead of [MIP-0077](https://github.com/marola-dev/marola/pull/675)'s tasks; nothing imports them yet. They pull `kyo-schema` and `kyo-jsonrpc` | — |
 | JDK `java.net.http` | (the JDK) | core | `Http`, a thin client wrapper with one `Transport` seam that the golden spec replays fixtures through | `kyo-http`, deferred ([below](#kyo-modules-at-100-rc7)) |
-| Hand-rolled JSON (`marola.json`) | — | core | Every shape read or written is plain nested objects, arrays, strings and numbers. 375 `JsonValue` references across 29 main files navigate them by hand | `kyo-schema-json`, promoted ([MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)) |
+| Hand-rolled JSON (`marola.json`) | — | core | Every shape read or written is plain nested objects, arrays, strings and numbers. 375 `JsonValue` references across 29 main files navigate them by hand | `kyo-schema-json`, promoted ([MIP-0077](https://github.com/marola-dev/marola/pull/675)) |
 | `logback-classic` | 1.6.5 | all | The SLF4J backend; `cli`'s `logback.xml` sends every logger to stderr, because stdout is the MCP server's JSON-RPC channel. `marola.log.Log` wraps SLF4J directly | scala-logging, rejected: its only Scala 3 release is 4.0.0-RC1. `kyo-logging-slf4j`, rejected ([below](#kyo-modules-at-100-rc7)) |
-| MCP Java SDK (`io.modelcontextprotocol.sdk:mcp`) | 2.0.1 | cli | `SwimConditionsMcpServer`'s stdio transport and tool registry. It finds its JSON-schema validator through `ServiceLoader`, which is why the assembly concatenates `META-INF/services` | `kyo-mcp`, promoted ([MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)) |
+| MCP Java SDK (`io.modelcontextprotocol.sdk:mcp`) | 2.0.1 | cli | `SwimConditionsMcpServer`'s stdio transport and tool registry. It finds its JSON-schema validator through `ServiceLoader`, which is why the assembly concatenates `META-INF/services` | `kyo-mcp`, promoted ([MIP-0077](https://github.com/marola-dev/marola/pull/675)) |
 | OpenTelemetry `opentelemetry-sdk`, `opentelemetry-exporter-otlp` (`opentelemetry-sdk-testing` in tests) | 1.66.0 | local | Traces to MLflow, which ingests them over OTLP/HTTP only (MIP-0010) | `kyo-stats-otlp`, deferred ([below](#kyo-modules-at-100-rc7)) |
 | Apache PDFBox | 3.0.8 | local | The agencies publish bulletins only as PDFs; a JVM parser keeps the image free of native tools (MIP-0031 §4.3) | bundling `pdftotext` in the image, rejected |
 | munit | 1.3.6 | all (tests) | The test framework; its tags keep `E2E` suites out of `just test` | `kyo-test-*`, deferred ([below](#kyo-modules-at-100-rc7)) |
@@ -70,7 +70,7 @@ marola-site, marola-oods and marola-ml run this repo's image and count through t
 (`.claude/agents/jar-verifier.md`), not against getkyo.io. "Pulls" is what the module adds to
 marola's current `kyo-core` + `kyo-direct` + `kyo-combinators` set (`cs resolve`); none of them
 pulls netty. The promoted three are planned in
-[MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/), one marola-app PR each;
+[MIP-0077](https://github.com/marola-dev/marola/pull/675), one marola-app PR each;
 nothing here changes code.
 
 | Module | marola today, and where | Verdict | Why |
