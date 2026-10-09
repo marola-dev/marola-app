@@ -123,5 +123,5 @@ fully encapsulated in a private class). The gap is specifically the FP-purity se
 can throw without saying so in their type. Both are real, both are fixable with Kyo's own `Env`/
 `Abort` effects, and neither is urgent enough to have blocked shipping the features this review
 accompanied. Captured here as the concrete next step for whoever picks up the
-[kyo-http/kyo-schema migration](2-libraries.md#kyo-http-and-kyo-schema), since that's the natural
+[kyo-schema-json migration](2-libraries.md#kyo-modules-at-100-rc7) (MIP-0077), since that's the natural
 moment to also tighten these two effect boundaries.
