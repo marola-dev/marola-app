@@ -13,7 +13,7 @@ is the [Scala 3 and JDK review](2-libraries_scala3-jdk.md).
 |---|---|---|---|
 | Scala | 3.9.0 | `build.sbt` | The LTS line; Kyo's recommended strict flags (`-Wvalue-discard`, `-Wnonunit-statement`, `-language:strictEquality`) are set there |
 | JDK | 25 | `flake.nix` (`jdk25`), CI's `setup-java`, the Dockerfile's Temurin 25 images | Kyo 1.0.0-RC7's class files are version 69, so both sbt and the runtime need 25 or later |
-| sbt | 1.10.7 | `project/build.properties` | The build; `flake.nix` rebuilds nixpkgs' sbt on JDK 25 because its wrapper hardcodes its own `JAVA_HOME` |
+| sbt | 1.13.0 | `project/build.properties` | The build; `flake.nix` rebuilds nixpkgs' sbt on JDK 25 because its wrapper hardcodes its own `JAVA_HOME` |
 | scalafmt | 3.8.3 | `.scalafmt.conf` | Formatting, checked in CI |
 
 ## Libraries
@@ -21,13 +21,14 @@ is the [Scala 3 and JDK review](2-libraries_scala3-jdk.md).
 | Library | Version | Module | Why | Alternatives |
 |---|---|---|---|---|
 | Kyo: `kyo-core`, `kyo-direct`, `kyo-combinators` | 1.0.0-RC7 | all | The effect system at the I/O boundary (`Sync`, `Async`, `Abort`); `kyo-direct` for the direct-style syntax. Pre-1.0 with no version-specific docs, so the pinned jar is the reference (`.claude/agents/jar-verifier.md`) | Every other RC7 module was reviewed: [Kyo modules at 1.0.0-RC7](#kyo-modules-at-100-rc7) |
+| Kyo: `kyo-schema-json` (all), `kyo-mcp` (cli) | 1.0.0-RC7 | all, cli | On the classpath ahead of [MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)'s tasks; nothing imports them yet. They pull `kyo-schema` and `kyo-jsonrpc` | — |
 | JDK `java.net.http` | (the JDK) | core | `Http`, a thin client wrapper with one `Transport` seam that the golden spec replays fixtures through | `kyo-http`, deferred ([below](#kyo-modules-at-100-rc7)) |
 | Hand-rolled JSON (`marola.json`) | — | core | Every shape read or written is plain nested objects, arrays, strings and numbers. 375 `JsonValue` references across 29 main files navigate them by hand | `kyo-schema-json`, promoted ([MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)) |
-| `logback-classic` | 1.5.13 | all | The SLF4J backend; `cli`'s `logback.xml` sends every logger to stderr, because stdout is the MCP server's JSON-RPC channel. `marola.log.Log` wraps SLF4J directly | scala-logging, rejected: its only Scala 3 release is 4.0.0-RC1. `kyo-logging-slf4j`, rejected ([below](#kyo-modules-at-100-rc7)) |
-| MCP Java SDK (`io.modelcontextprotocol.sdk:mcp`) | 2.0.0 | cli | `SwimConditionsMcpServer`'s stdio transport and tool registry. It finds its JSON-schema validator through `ServiceLoader`, which is why the assembly concatenates `META-INF/services` | `kyo-mcp`, promoted ([MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)) |
-| OpenTelemetry `opentelemetry-sdk`, `opentelemetry-exporter-otlp` (`opentelemetry-sdk-testing` in tests) | 1.65.0 | local | Traces to MLflow, which ingests them over OTLP/HTTP only (MIP-0010) | `kyo-stats-otlp`, deferred ([below](#kyo-modules-at-100-rc7)) |
+| `logback-classic` | 1.6.5 | all | The SLF4J backend; `cli`'s `logback.xml` sends every logger to stderr, because stdout is the MCP server's JSON-RPC channel. `marola.log.Log` wraps SLF4J directly | scala-logging, rejected: its only Scala 3 release is 4.0.0-RC1. `kyo-logging-slf4j`, rejected ([below](#kyo-modules-at-100-rc7)) |
+| MCP Java SDK (`io.modelcontextprotocol.sdk:mcp`) | 2.0.1 | cli | `SwimConditionsMcpServer`'s stdio transport and tool registry. It finds its JSON-schema validator through `ServiceLoader`, which is why the assembly concatenates `META-INF/services` | `kyo-mcp`, promoted ([MIP-0077](https://docs.marola.dev/6-MIPs/MIP-0077-kyo-rc7-modules/)) |
+| OpenTelemetry `opentelemetry-sdk`, `opentelemetry-exporter-otlp` (`opentelemetry-sdk-testing` in tests) | 1.66.0 | local | Traces to MLflow, which ingests them over OTLP/HTTP only (MIP-0010) | `kyo-stats-otlp`, deferred ([below](#kyo-modules-at-100-rc7)) |
 | Apache PDFBox | 3.0.8 | local | The agencies publish bulletins only as PDFs; a JVM parser keeps the image free of native tools (MIP-0031 §4.3) | bundling `pdftotext` in the image, rejected |
-| munit | 1.0.2 | all (tests) | The test framework; its tags keep `E2E` suites out of `just test` | `kyo-test-*`, deferred ([below](#kyo-modules-at-100-rc7)) |
+| munit | 1.3.6 | all (tests) | The test framework; its tags keep `E2E` suites out of `just test` | `kyo-test-*`, deferred ([below](#kyo-modules-at-100-rc7)) |
 
 ## sbt plugins
 
@@ -35,9 +36,9 @@ All in `project/plugins.sbt`.
 
 | Plugin | Version | Why |
 |---|---|---|
-| sbt-assembly | 2.3.0 | The fat jar the image runs (`cli/assembly`); its merge strategy keeps `META-INF/services` and `META-INF/native-image` |
-| sbt-scalafmt | 2.5.2 | `just fmt`, `quality-scala` |
-| sbt-scalafix | 0.14.8 | Semantic lint (`.scalafix.conf`: unused code, import order, banned syntax); needs SemanticDB, enabled in `build.sbt` |
+| sbt-assembly | 2.5.0 | The fat jar the image runs (`cli/assembly`); its merge strategy keeps `META-INF/services` and `META-INF/native-image` |
+| sbt-scalafmt | 2.6.2 | `just fmt`, `quality-scala` |
+| sbt-scalafix | 0.14.9 | Semantic lint (`.scalafix.conf`: unused code, import order, banned syntax); needs SemanticDB, enabled in `build.sbt` |
 | sbt-native-image | 0.5.0 | `sbt cli/nativeImage`, run by `just native-image` with nixpkgs' GraalVM |
 | sbt-scoverage | 2.4.4 | `just coverage` and the README's coverage badge |
 
@@ -78,7 +79,7 @@ nothing here changes code.
 | `kyo-mcp` + `kyo-jsonrpc` | MCP Java SDK 2.0.0 (`cli/.../agent/SwimConditionsMcpServer.scala`), with its `AllowUnsafe.embrace.danger` boundary | **promote** | `McpHandler.tool[In]` derives each tool's JSON Schema from `Schema[In]` and runs a Kyo handler, so the unsafe boundary goes. `JsonRpcTransport.stdioWith` diverts `Console` output to stderr. Removes Jackson 3.0.3, Reactor 3.7.0, `json-schema-validator`, snakeyaml-engine. The server is a JVM-only main class; the line-delimited stdio wire runs on `Console`, not on kyo-net |
 | `kyo-case-app` | `args.indexOf` parsing in `cli/.../Main.scala`; nothing yet for `marola.oods.Main` | **promote** (`oods` only) | MIP-0075's six `oods` subcommands, with repeated, enumerated and numeric flags, become case classes under `KyoCommand`/`CommandsEntryPoint` (case-app 2.1.0) instead of a third hand parser. `oods` is JVM-only. `cli`'s positional-optional grammar stays as it is |
 | `kyo-http` (client and server) | `marola.http.Http` on `java.net.http` (`core`); `ChatServer` on `com.sun.net.httpserver` (`cli`) | **defer** | Its own HTTP/1.1 stack on `kyo-net`: Panama (FFM) io_uring/epoll backends and BoringSSL/OpenSSL bindings, with an NIO and JDK-TLS floor. It has no HTTP proxy option, so MIP-0075 §4.6's Brazil proxy (`-Dhttps.proxyHost`) would be ignored. `Http.withTransport` has no counterpart, and FFM under native-image is unproven. **Revisit** when it supports a proxy and `just native-image` builds and runs with it |
-| `kyo-stats-otlp` | `opentelemetry-sdk` + `-exporter-otlp` 1.65.0 (`local/.../MlflowTracing.scala`) | **defer** | `OTLPTraceExporter.init(OTLPConfig)` exports OTLP/JSON through kyo-http and traces through Kyo's own `Trace` API, not OTel spans. Whether MLflow's OTLP endpoint takes JSON with `x-mlflow-experiment-id` is unverified. **Revisit** after kyo-http, with one live MLflow run |
+| `kyo-stats-otlp` | `opentelemetry-sdk` + `-exporter-otlp` 1.66.0 (`local/.../MlflowTracing.scala`) | **defer** | `OTLPTraceExporter.init(OTLPConfig)` exports OTLP/JSON through kyo-http and traces through Kyo's own `Trace` API, not OTel spans. Whether MLflow's OTLP endpoint takes JSON with `x-mlflow-experiment-id` is unverified. **Revisit** after kyo-http, with one live MLflow run |
 | `kyo-stats-otel` | as above | **reject** | Last published at 1.0-RC1 (2025-07), not at RC7 |
 | `kyo-ai` | `LlmClient` + `LocalLlmClient` (`core`, `local`, ~60 lines), `VisionClient` | **defer** | `Config.apiUrl` can point its OpenAI-compatible backend at Ollama's `/v1`, but it pulls kyo-http, kyo-mcp and kyo-actor into the native `cli` for a 60-line client. **Revisit** after kyo-http, or when marola needs typed structured output or tool calling from the model |
 | `kyo-llm` | as above | **reject** | Latest is 0.9.0 (2024-03), pre-1.0. kyo-ai is its successor. The earlier "no `kyo-ai` on Maven Central" note was wrong from RC6 on |
@@ -91,7 +92,7 @@ nothing here changes code.
 | `kyo-flow` | none | **reject** | A durable workflow engine with an HTTP server and a store. The pipeline is one-shot, and MIP-0075 records each run in `fetch_run`. Same reasoning as workflows4s below |
 | `kyo-markdown` | `Corpus.chunkDocument` splits on `# ` headings | **reject** | It renders to `kyo-ui` (it pulls kyo-ui and kyo-http). marola only splits text |
 | `kyo-parse` | line regexes in the PDF parsers (`local/.../water/`) | **reject** | There is no grammar to parse; the regexes are short and covered by fixtures |
-| `kyo-test-api`, `-runner`, `-prop`, `-snapshot` | munit 1.0.2, a `Sync.Unsafe.evalOrThrow` helper per spec | **defer** | Published at RC7 (`kyo.test.runner.SbtFramework`, `kyo.test.prop.Gen`), but moving ~40 suites removes nothing. **Revisit** with the first property test (`.claude/rules/scala.md`: `Swimability.score` stays within 0 to 100), where kyo-test-prop competes with ScalaCheck. The old `kyo-test` (0.15.1) is pre-1.0: rejected |
+| `kyo-test-api`, `-runner`, `-prop`, `-snapshot` | munit 1.3.6, a `Sync.Unsafe.evalOrThrow` helper per spec | **defer** | Published at RC7 (`kyo.test.runner.SbtFramework`, `kyo.test.prop.Gen`), but moving ~40 suites removes nothing. **Revisit** with the first property test (`.claude/rules/scala.md`: `Swimability.score` stays within 0 to 100), where kyo-test-prop competes with ScalaCheck. The old `kyo-test` (0.15.1) is pre-1.0: rejected |
 | `kyo-reactive-streams` | Reactor, only inside the MCP SDK | **reject** | kyo-mcp removes the only reactive-streams user |
 | `kyo-tapir`, `kyo-sttp` | none | **reject** | Last published at 1.0-RC1, not at RC7. marola uses neither tapir nor sttp |
 | `kyo-slack` | none (marola's bot is Telegram) | **reject** | No Slack integration |

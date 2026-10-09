@@ -38,12 +38,14 @@ lazy val baseSettings = Seq(
     "io.getkyo" %% "kyo-core"        % kyoVersion,
     "io.getkyo" %% "kyo-direct"      % kyoVersion, // direct-style (.now / defer) syntax
     "io.getkyo" %% "kyo-combinators" % kyoVersion,
+    // MIP-0077: not used yet; kyo-schema-json pulls kyo-schema.
+    "io.getkyo" %% "kyo-schema-json" % kyoVersion,
 
     // --- Logging ---
-    "ch.qos.logback" % "logback-classic" % "1.5.13",
+    "ch.qos.logback" % "logback-classic" % "1.6.5",
 
     // --- Test ---
-    "org.scalameta" %% "munit" % "1.0.2" % Test
+    "org.scalameta" %% "munit" % "1.3.6" % Test
   ),
 
   testFrameworks += munitFramework,
@@ -75,7 +77,7 @@ lazy val core = (project in file("core"))
   .settings(baseSettings)
   .settings(name := "marola-core")
 
-val OpenTelemetryVersion = "1.65.0"
+val OpenTelemetryVersion = "1.66.0"
 
 val PdfboxVersion = "3.0.8"
 
@@ -108,7 +110,11 @@ lazy val cli = (project in file("cli"))
     nativeImageInstalled := true,
     nativeImageOutput := target.value / "marola",
     // --- MCP (agent tool wiring — see agent/SwimConditionsMcpServer.scala) ---
-    libraryDependencies += "io.modelcontextprotocol.sdk" % "mcp" % "2.0.0",
+    libraryDependencies ++= Seq(
+      "io.modelcontextprotocol.sdk" % "mcp" % "2.0.1",
+      // MIP-0077: replaces the SDK above once its task lands; pulls kyo-jsonrpc.
+      "io.getkyo" %% "kyo-mcp" % kyoVersion
+    ),
     assembly / mainClass := Some("marola.Main"),
     // SwimConditionsMcpServer has a `main` too; unpinned, `sbt run` prompts and hangs in batch mode.
     Compile / run / mainClass := Some("marola.Main"),
