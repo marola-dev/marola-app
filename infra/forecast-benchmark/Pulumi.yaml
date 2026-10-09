@@ -1,3 +1,0 @@
-name: forecast-benchmark
-runtime: scala
-description: GCP resources for MIP-0083's forecast benchmark (bucket, Workload Identity, budget)

@@ -1,6 +1,6 @@
-package marola.verify
+package marola.experiment
 
-import marola.verify.GroundTruth.{Invalid, Kind}
+import marola.experiment.GroundTruth.{Invalid, Kind}
 
 class GroundTruthSpec extends munit.FunSuite:
 

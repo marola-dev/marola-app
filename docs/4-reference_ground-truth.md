@@ -40,8 +40,8 @@ station.
 
 ## The file
 
-`verify/src/main/resources/forecast-benchmark/ground-truth.json`, read by
-`marola.verify.GroundTruth`. Its git blob sha is logged with every benchmark cycle, so any change
+`experiment/src/main/resources/experiment/ground-truth.json`, read by
+`marola.experiment.GroundTruth`. Its git blob sha is logged with every benchmark cycle, so any change
 to it shows in the record.
 
 | Field | Meaning |

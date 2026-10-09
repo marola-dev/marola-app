@@ -1,4 +1,4 @@
-package marola.verify
+package marola.experiment
 
 import java.time.LocalDate
 
@@ -88,7 +88,7 @@ object GroundTruth:
       case e: MalformedField               => Left(Vector(Invalid.Malformed(e.getMessage)))
 
   def bundled: Either[Vector[Invalid], GroundTruth] =
-    Using(Source.fromResource("forecast-benchmark/ground-truth.json"))(_.mkString).toEither.left
+    Using(Source.fromResource("experiment/ground-truth.json"))(_.mkString).toEither.left
       .map(e => Vector(Invalid.Malformed(s"ground-truth.json: $e")))
       .flatMap(parse)
 

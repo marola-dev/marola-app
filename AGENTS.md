@@ -29,12 +29,9 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 - `cli/`: `Main`, `AppConfig` (settings from env vars), the MCP tool server, the benchmark runner,
   `--site`'s board writer. Use `sbt cli/run` / `cli/runMain …`, not `sbt run` at the root (a pure
   aggregate with no source of its own).
-- `verify/`: the forecast benchmark (MIP-0083, ADR-0002); its ground-truth points are
-  `verify/src/main/resources/forecast-benchmark/ground-truth.json`, documented in
-  `docs/4-reference_ground-truth.md`.
-- `infra/forecast-benchmark/`: the benchmark's GCP side as a Besom scala-cli project, outside the
-  sbt build. CI only compiles it (`just infra-compile`); `pulumi up` is a human's, after the cost
-  is confirmed, never an agent's.
+- `experiment/`: the forecast experiment (MIP-0083, ADR-0002): its schemas (`schema/`, kyo-schema,
+  with the lake DDL and the scorecard's JSON Schema under `src/main/resources/experiment/`) and its
+  ground-truth points, `ground-truth.json`, documented in `docs/4-reference_ground-truth.md`.
 - `oods/src/test/resources/`: the OODS ingest's test fixtures (MIP-0056); its code lands here too.
 - `README.md` (the landing) and `docs/`: this repo's numbered pages (`1-design*`, `2-libraries*`,
   `3-development`, `4-reference*`) and ADRs (`docs/adr/`), mounted by the umbrella at
