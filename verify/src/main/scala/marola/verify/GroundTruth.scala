@@ -2,6 +2,9 @@ package marola.verify
 
 import java.time.LocalDate
 
+import scala.io.Source
+import scala.util.Using
+
 import marola.json.JsonValue
 
 /**
@@ -11,8 +14,7 @@ import marola.json.JsonValue
  */
 final case class GroundTruth(
     thresholds: GroundTruth.Thresholds,
-    points: Vector[GroundTruth.Point],
-    deviations: Vector[GroundTruth.Deviation]
+    points: Vector[GroundTruth.Point]
 ):
   def scored: Vector[GroundTruth.Point] = points.filter(_.status == GroundTruth.Status.Scored)
 
@@ -51,23 +53,18 @@ object GroundTruth:
   /** Where the coordinates were confirmed: a URL and the date it was read. */
   final case class Checked(source: String, on: LocalDate)
 
+  // Only what the loader checks and the screen and scorer read; the file's other fields are for
+  // people (docs/4-reference_ground-truth.md).
   final case class Point(
       id: String,
       state: String,
-      name: String,
       kind: Kind,
       station: String,
       lat: Option[Double],
       lon: Option[Double],
-      elevationM: Option[Double],
-      anemometerM: Option[Double],
-      exposure: String,
       status: Status,
-      checked: Option[Checked],
-      note: String
+      checked: Option[Checked]
   )
-
-  final case class Deviation(on: LocalDate, text: String)
 
   enum Invalid derives CanEqual:
     case Malformed(detail: String)
@@ -91,13 +88,11 @@ object GroundTruth:
       case e: MalformedField               => Left(Vector(Invalid.Malformed(e.getMessage)))
 
   def bundled: Either[Vector[Invalid], GroundTruth] =
-    val in = getClass.getResourceAsStream("/forecast-benchmark/ground-truth.json")
-    if in == null then Left(Vector(Invalid.Malformed("ground-truth.json not on the classpath")))
-    else
-      try parse(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8))
-      finally in.close()
+    Using(Source.fromResource("forecast-benchmark/ground-truth.json"))(_.mkString).toEither.left
+      .map(e => Vector(Invalid.Malformed(s"ground-truth.json: $e")))
+      .flatMap(parse)
 
-  def validate(gt: GroundTruth): Either[Vector[Invalid], GroundTruth] =
+  private def validate(gt: GroundTruth): Either[Vector[Invalid], GroundTruth] =
     val ids = gt.points.map(_.id)
     val duplicates = ids.diff(ids.distinct).distinct.map(Invalid.DuplicateId(_))
     val perPoint = gt.points.flatMap { p =>
@@ -152,10 +147,7 @@ object GroundTruth:
         galeDaysPerYear = int(t, "gale_days_per_year"),
         frozen = t("frozen").str.map(date(_, "thresholds.frozen"))
       ),
-      points = json("points").arr.map(readPoint),
-      deviations = json("deviations").arr.map(d =>
-        Deviation(date(str(d, "on"), "deviations.on"), str(d, "text"))
-      )
+      points = json("points").arr.map(readPoint)
     )
 
   private def readPoint(p: JsonValue): Point =
@@ -163,19 +155,14 @@ object GroundTruth:
     Point(
       id = id,
       state = str(p, "state"),
-      name = str(p, "name"),
       kind = label(Kind.fromLabel, str(p, "kind"), s"$id.kind"),
       station = str(p, "station"),
       lat = p("lat").num,
       lon = p("lon").num,
-      elevationM = p("elevation_m").num,
-      anemometerM = p("anemometer_m").num,
-      exposure = str(p, "exposure"),
       status = label(Status.fromLabel, str(p, "status"), s"$id.status"),
       checked = p("checked") match
         case JsonValue.JNull => None
-        case c => Some(Checked(str(c, "source"), date(str(c, "on"), s"$id.checked.on"))),
-      note = p("note").str.getOrElse("")
+        case c => Some(Checked(str(c, "source"), date(str(c, "on"), s"$id.checked.on")))
     )
 
   private def str(j: JsonValue, key: String): String =
