@@ -24,19 +24,19 @@
       "note": "WMO 83899"
     },
     {
-      "id": "sc-a803",
+      "id": "sc-a806",
       "state": "SC",
       "name": "Florianópolis, INMET automatic station",
       "kind": "inmet",
-      "station": "A803",
-      "lat": null,
-      "lon": null,
-      "elevation_m": null,
+      "station": "A806",
+      "lat": -27.6025,
+      "lon": -48.61999999,
+      "elevation_m": 4.87,
       "anemometer_m": null,
       "exposure": "not checked",
       "status": "candidate",
-      "checked": null,
-      "note": "code from marola-dev/marola#723 (an INMET news page); coordinates not read from INMET's catalogue"
+      "checked": { "source": "https://apitempo.inmet.gov.br/estacoes/T", "on": "2026-10-09" },
+      "note": "operating since 2003-01-21 (WMO 86958); #723 named A803, which INMET's catalogue lists as Santa Maria (RS)"
     },
     {
       "id": "rj-sbrj",
@@ -59,14 +59,14 @@
       "name": "Rio de Janeiro, Forte de Copacabana",
       "kind": "inmet",
       "station": "A652",
-      "lat": null,
-      "lon": null,
-      "elevation_m": null,
+      "lat": -22.98833333,
+      "lon": -43.19055555,
+      "elevation_m": 25.59,
       "anemometer_m": null,
       "exposure": "not checked",
       "status": "candidate",
-      "checked": null,
-      "note": "code from memory in marola-dev/marola#723; not read from INMET's catalogue"
+      "checked": { "source": "https://apitempo.inmet.gov.br/estacoes/T", "on": "2026-10-09" },
+      "note": "operating since 2007-05-17 (WMO 86887)"
     },
     {
       "id": "rj-sbcb",
@@ -119,14 +119,14 @@
       "name": "Salvador, INMET automatic station",
       "kind": "inmet",
       "station": "A401",
-      "lat": null,
-      "lon": null,
-      "elevation_m": null,
+      "lat": -13.00555555,
+      "lon": -38.50583333,
+      "elevation_m": 47.56,
       "anemometer_m": null,
       "exposure": "not checked",
       "status": "candidate",
-      "checked": null,
-      "note": "code from memory in marola-dev/marola#723; not read from INMET's catalogue"
+      "checked": { "source": "https://apitempo.inmet.gov.br/estacoes/T", "on": "2026-10-09" },
+      "note": "operating since 2000-05-12 (WMO 86678)"
     },
     {
       "id": "ba-sbil",

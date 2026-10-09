@@ -35,11 +35,6 @@ class SamplingRegistrySpec extends munit.FunSuite:
       parse(point("a", instrument = "null"), point("b", instrument = "\"sc-zzzz\"")),
       Left(Vector(Invalid.NoGroundTruth("a"), Invalid.NoGroundTruth("b")))
     )
-    // sc-a803 is in ground-truth.json without checked coordinates, so nothing can sit on it yet.
-    assertEquals(
-      parse(point("c", instrument = "\"sc-a803\"")),
-      Left(Vector(Invalid.NotAtInstrument("c")))
-    )
     assertEquals(parse(point("d", lat = -27.6)), Left(Vector(Invalid.NotAtInstrument("d"))))
   }
 
