@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ifs",
+    "route": "open_meteo",
+    "model_id": "ecmwf_ifs",
+    "runs_utc": [0, 6, 12, 18],
+    "members": 1,
+    "max_lead_h": 360,
+    "added_on": "2026-10-09"
+  },
+  {
+    "id": "gfs",
+    "route": "open_meteo",
+    "model_id": "ncep_gfs013",
+    "runs_utc": [0, 6, 12, 18],
+    "members": 1,
+    "max_lead_h": 384,
+    "added_on": "2026-10-09"
+  }
+]
