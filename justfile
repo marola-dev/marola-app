@@ -187,3 +187,4 @@ mlflow-up:
 
 mlflow-down:
     docker compose --profile mlflow down
+
