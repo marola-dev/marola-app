@@ -70,9 +70,14 @@ class ImaScPdfWaterQualityClientSpec extends munit.FunSuite:
       <a href="http://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/2026-08-11">z</a>"""
     assertEquals(
       ImaScPdfWaterQualityClient.latestBulletinUrl(html),
-      Some("http://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/2026-08-28"),
+      Some("https://balneabilidade.ima.sc.gov.br/relatorio/downloadPDF/2026-08-28"),
       "hardcoding one bulletin is what left Rio pinned to a June PDF until it aged out"
     )
+  }
+
+  test("the portal over http answers 301 to https, which Http does not follow (#57)") {
+    assert(ImaScPdfWaterQualityClient.DefaultIndexUrl.startsWith("https://"))
+    assert(ImaScPdfWaterQualityClient.DefaultPointsUrl.startsWith("https://"))
   }
 
   test("an index with no bulletin link yields None rather than a guessed URL") {

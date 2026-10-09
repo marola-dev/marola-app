@@ -138,6 +138,20 @@ class HttpSpec extends munit.FunSuite:
     assertEquals(t.sent, 1)
   }
 
+  test("requests carry a User-Agent pointing at marola-dev/marola-app") {
+    var sent: Option[HttpRequest] = None
+    val capturing = new Http.Transport:
+      def send(request: HttpRequest): Http.Response =
+        sent = Some(request)
+        Http.Response(200, "ok")
+    val body = Http.withTransport(capturing) {
+      Sync.Unsafe.evalOrThrow(Http.getString("https://example.test/ua"))
+    }
+    assertEquals(body, "ok")
+    val ua = sent.flatMap(r => Option(r.headers().firstValue("User-Agent").orElse(null)))
+    assert(ua.exists(_.contains("github.com/marola-dev/marola-app")), ua)
+  }
+
   test("the backoff doubles per attempt from the base") {
     assertEquals(Http.backoffFor(baseMs = 1000, attempt = 0), 1000L)
     assertEquals(Http.backoffFor(baseMs = 1000, attempt = 1), 2000L)

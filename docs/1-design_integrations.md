@@ -176,19 +176,20 @@ every agency in `CachedWaterQualityClient` (the last good fetch, under `data/wat
 
 - [`ImaScWaterQualityClient`](../local/src/main/scala/marola/water/ImaScWaterQualityClient.scala):
   one empty `POST` to the JSON feed the portal's map uses, about 260 points with coordinates and
-  their last five samples, parsed tolerantly.
+  their last five samples, parsed tolerantly. A point with no dated sample is dropped; since 2026-10
+  the feed sends none, so it gives nothing and the bulletin takes over (#57).
 - [`ImaScPdfWaterQualityClient`](../local/src/main/scala/marola/water/ImaScPdfWaterQualityClient.scala):
   the newest weekly bulletin, found from the portal's index rather than pinned.
   [`ImaScPdfParser`](../local/src/main/scala/marola/water/ImaScPdfParser.scala) reads its dates and
-  verdicts, which carry no coordinates, so rows are joined by beach and point name to the HTTP
-  feed's point list. It covers the feed being unreachable while the bulletin is up.
+  verdicts, which carry no coordinates, so rows are joined by beach and point name to the feed's
+  point list. It covers the feed being unreachable, or sending no samples, while the bulletin is up.
 - [`IneaRjWaterQualityClient`](../local/src/main/scala/marola/water/IneaRjWaterQualityClient.scala)
   and [`InemaBaWaterQualityClient`](../local/src/main/scala/marola/water/InemaBaWaterQualityClient.scala):
   bulletin PDFs only, read by [`IneaPdfParser`](../local/src/main/scala/marola/water/IneaPdfParser.scala)
   and [`InemaPdfParser`](../local/src/main/scala/marola/water/InemaPdfParser.scala), placed with
   hand-curated coordinate tables
   ([`SamplingPointCoordinates`](../local/src/main/scala/marola/water/SamplingPointCoordinates.scala)).
-  INEA's PDFs are found on its city pages; INEMA's URL pins one campaign.
+  INEA's PDFs are found on its city pages, INEMA's on its listing page, each dated by its file name.
 - [`PdfLines`](../local/src/main/scala/marola/water/PdfLines.scala) keeps each line's position:
   read in natural order these tables pair a verdict with the wrong beach, which for a safety verdict
   is a wrong answer, not a formatting bug.
