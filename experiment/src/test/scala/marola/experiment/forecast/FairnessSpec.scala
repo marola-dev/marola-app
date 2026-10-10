@@ -19,8 +19,8 @@ class FairnessSpec extends munit.FunSuite:
   )
 
   /** The GFS 18Z cycle with every clock reading shifted to `fetchAt`. */
-  private def collectAt(fetchAt: Instant): Collected =
-    run(Replay(recorded*))(m =>
+  private def collectAt(fetchAt: Instant, t: Http.Transport = Replay(recorded*)): Collected =
+    run(t)(m =>
       Clock.now.map { now =>
         Clock.withTimeOffset(Clock.TimeOffset.between(now, kyo.Instant.fromJava(fetchAt)))(
           source(gfs, m).collect(known, Chunk(sbfl))
@@ -78,6 +78,19 @@ class FairnessSpec extends munit.FunSuite:
     assertEquals(got.runs.map(r => (r.runInit, r.state)), Chunk(gfsEarlier -> RunState.Backfilled))
     assert(got.samples.forall(_.sourceUrl.startsWith(OpenMeteoForecasts.SingleRunBase)))
     assertEquals(got.samples.map(_.runInit).distinct, Chunk(gfsEarlier))
+  }
+
+  test("older_run_on_reread_keeps_the_latest") {
+    // Open-Meteo's servers update apart: live, ecmwf_ifs's metadata alternated between 12Z and
+    // 18Z read to read, so a lagging server is not a new run.
+    val t = Replay(
+      (isMeta("ncep_gfs013") -> Seq(
+        Http.Response(200, metaWithInit("ncep_gfs013", gfsRun)),
+        Http.Response(200, metaWithInit("ncep_gfs013", gfsEarlier))
+      )) +: recorded*
+    )
+    val got = collectAt(Instant.parse("2026-10-09T23:52:00Z"), t)
+    assertEquals(got.runs.map(r => (r.runInit, r.state)), Chunk(gfsRun -> RunState.Sampled))
   }
 
   test("backfill_hash_mismatch_recorded") {
