@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 import kyo.*
 
-import marola.experiment.SamplingRegistry.Invalid
+import marola.experiment.Protocols.Invalid
 import marola.experiment.schema.PointKind
 
 class SamplingRegistrySpec extends munit.FunSuite:
