@@ -136,10 +136,16 @@ lazy val cli = (project in file("cli"))
 // MIP-0083: the forecast experiment. A sibling of `cli`, not part of it: nothing on the
 // recommendation path reads it, and its scheduled job is built from this project alone.
 lazy val experiment = (project in file("experiment"))
-  .dependsOn(core)
+  .dependsOn(core, local)
   .settings(baseSettings)
   .settings(
     name := "marola-experiment",
+    Compile / mainClass := Some("marola.experiment.Main"),
+    assembly / mainClass := Some("marola.experiment.Main"),
+    Compile / run / fork := true,
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value,
+    Compile / run / javaOptions ++=
+      Seq("--sun-misc-unsafe-memory-access=allow", "--enable-native-access=ALL-UNNAMED"),
     libraryDependencies ++= Seq(
       "io.getkyo" %% "kyo-schema"      % kyoVersion,
       "io.getkyo" %% "kyo-schema-json" % kyoVersion,

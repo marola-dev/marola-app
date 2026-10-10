@@ -54,7 +54,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 | `core/` | the pure pipeline, the shared HTTP/JSON helpers, the `LlmClient` / `VisionClient` / `SightingStore` traits |
 | `local/` | the Ollama-backed implementations and the local-file sighting store |
 | `cli/` | `Main`, `AppConfig`, the MCP and chat servers, the benchmark runner, the board writer |
-| `experiment/` | the forecast experiment (MIP-0083): its schemas, its ground-truth points (`ground-truth.json` and its loader) and the Open-Meteo forecast route |
+| `experiment/` | the forecast experiment (MIP-0083): its schemas, its ground-truth points (`ground-truth.json` and its loader), the Open-Meteo forecast route and the [cycle](docs/4-reference_experiment-cycle.md) |
 | `oods/src/test/resources/` | the OODS ingest's test fixtures (MIP-0056); its code lands here too |
 | `scripts/` | the corpus fetch, the resources tarball, the `site-data` push, Scaladoc post-processing, test fixtures |
 | `docs/` | this repo's design, library, development and reference pages, and its ADRs (`docs/adr/`) |
