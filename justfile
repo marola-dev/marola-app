@@ -188,3 +188,15 @@ mlflow-up:
 mlflow-down:
     docker compose --profile mlflow down
 
+# MIP-0083: one forecast-benchmark cycle into the local lake (.tmp/experiment/lake), logged to
+# the MLflow of `just mlflow-up`. MAROLA_EXPERIMENT_FLAGS_DRYRUN=true keeps nothing.
+experiment-cycle:
+    MAROLA_EXPERIMENT_FLAGS_MLFLOWURI="${MAROLA_EXPERIMENT_FLAGS_MLFLOWURI-http://127.0.0.1:5000}" \
+        sbt "experiment/run cycle"
+
+# The last cycle's days rebuilt from the lake alone; run the same UTC day as the cycle, the two
+# files must match.
+experiment-rescore:
+    sbt "experiment/run rescore"
+    diff .tmp/experiment/out/scores.json .tmp/experiment/out/rescore.json
+

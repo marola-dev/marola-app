@@ -32,7 +32,8 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 - `experiment/`: the forecast experiment (MIP-0083, ADR-0002): its schemas (`schema/`, kyo-schema,
   with the lake DDL and the scorecard's JSON Schema under `src/main/resources/experiment/`), its
   ground-truth points, `ground-truth.json`, documented in `docs/4-reference_ground-truth.md`, and
-  `SampleStore` with `LakeSamples`, the local DuckLake (or plain DuckDB file) the samples go to.
+  `SampleStore` with `LakeSamples`, the local DuckLake (or plain DuckDB file) the samples go to,
+  and `Main`'s `cycle`, `rescore` and `export` (`docs/4-reference_experiment-cycle.md`).
 - `oods/src/test/resources/`: the OODS ingest's test fixtures (MIP-0056); its code lands here too.
 - `README.md` (the landing) and `docs/`: this repo's numbered pages (`1-design*`, `2-libraries*`,
   `3-development`, `4-reference*`) and ADRs (`docs/adr/`), mounted by the umbrella at
