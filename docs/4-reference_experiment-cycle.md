@@ -12,6 +12,18 @@
 `just experiment-cycle` runs a cycle against the MLflow of `just mlflow-up`; `just
 experiment-rescore` then checks that `rescore.json` equals the cycle's `scores.json`.
 
+## On GitHub Actions
+
+`.github/workflows/experiment.yml` runs `cycle` at minute 17 of every fourth hour and on dispatch,
+in the `oods-lake` concurrency group, against an MLflow 3.16.0 it starts on localhost. Until the
+B2 lake lands, `.tmp/experiment` (the lake, `mlflow.db`) is restored from and saved to the Actions
+cache, which evicts an entry unused for 7 days: v0's record is not durable yet.
+
+MLflow's artifacts go to `s3://<B2_BUCKET>/mlflow` on Backblaze B2 when the secrets `B2_KEY_ID`
+and `B2_APPLICATION_KEY` and the variables `B2_BUCKET` and `B2_S3_ENDPOINT` (the bucket's S3
+endpoint, `https://s3.<region>.backblazeb2.com`) are all set; otherwise they stay in the cache and
+the run says so. Each run's `out/` is also kept as an Actions artifact for 14 days.
+
 ## Settings
 
 Read once at start, from a system property or its environment variable (kyo-config's
