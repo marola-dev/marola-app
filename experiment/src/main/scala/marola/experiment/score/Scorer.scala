@@ -21,19 +21,19 @@ object Scorer:
   private def key(m: Matched): Key = (m.point, m.variable, m.runInit, m.leadH, m.validTime)
 
   // The day is the valid time's: errors on one day are correlated across leads and points (rule 8).
-  def cells(matched: Chunk[Matched], bin: Matched => String = _ => "all"): Chunk[ScoreCell] =
+  def cells(matched: Chunk[Matched]): Chunk[ScoreCell] =
     matched
-      .groupBy(m => (m.provider, m.point, m.variable, m.leadH, bin(m), m.day))
+      .groupBy(m => (m.provider, m.point, m.variable, m.leadH, m.day))
       .toSeq
       .map {
-        case ((provider, point, variable, lead, b, day), ms) =>
+        case ((provider, point, variable, lead, day), ms) =>
           val s = Monoid.fold(ms.map(_.score))
           ScoreCell(
             provider,
             point,
             variable,
             lead,
-            b,
+            "all",
             day,
             s.n,
             s.sumE,

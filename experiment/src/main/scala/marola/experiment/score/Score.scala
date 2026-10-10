@@ -23,7 +23,6 @@ final case class Score(
 ) derives CanEqual:
   def bias: Double = sumE / n
   def rmse: Double = sqrt(sumSqE / n)
-  def mae: Double = sumAbsE / n
   def crps: Double = sumCrps / n
   def spread: Double = sqrt(sumSqSpread / n)
 

@@ -71,21 +71,9 @@ class FairnessSpec extends munit.FunSuite:
   }
 
   test("bootstrap_interval_containing_zero_is_tie") {
-    def day(d: Int, sumD: Double) =
-      PairCell(
-        "A",
-        "B",
-        "P",
-        Variable.WindSpeed10m,
-        12,
-        LocalDate.of(2026, 7, 1).plusDays(d),
-        4,
-        sumD,
-        sumD * sumD,
-        0,
-        1,
-        1
-      )
+    val d0 = LocalDate.of(2026, 7, 1)
+    def day(i: Int, s: Double) =
+      PairCell("A", "B", "P", Variable.WindSpeed10m, 12, d0.plusDays(i), 4, s, s * s, 0, 1, 1)
     val noisy = Chunk.from((0 until 30).map(d => day(d, if d % 2 == 0 then 1.0 else -1.2)))
     val tie = Scorer.bootstrap(noisy)
     assert(tie.low < 0 && tie.high > 0, tie)

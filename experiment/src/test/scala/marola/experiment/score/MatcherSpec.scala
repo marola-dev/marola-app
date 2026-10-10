@@ -14,34 +14,9 @@ class MatcherSpec extends munit.FunSuite:
     Instrument("I2", Network.Inmet, -26.9, -48.6, Some(10.0), "1h", "CC-BY"),
     Instrument("SBFL", Network.Metar, -27.7, -48.5, Some(10.0), "10min", "public")
   )
-  private val points = Chunk(
-    SamplingPoint(
-      "P1",
-      -27.6,
-      -48.5,
-      PointKind.Station,
-      Some("I1"),
-      LocalDate.of(2026, 7, 1),
-      None
-    ),
-    SamplingPoint(
-      "P2",
-      -26.9,
-      -48.6,
-      PointKind.Station,
-      Some("I2"),
-      LocalDate.of(2026, 7, 1),
-      None
-    ),
-    SamplingPoint(
-      "M",
-      -27.7,
-      -48.5,
-      PointKind.Station,
-      Some("SBFL"),
-      LocalDate.of(2026, 7, 1),
-      None
-    )
+  // The matcher reads only a point's instrument.
+  private val points = Chunk("P1" -> "I1", "P2" -> "I2", "M" -> "SBFL").map((id, inst) =>
+    SamplingPoint(id, 0.0, 0.0, PointKind.Station, Some(inst), LocalDate.of(2026, 7, 1), None)
   )
 
   private def forecast(point: String, validH: Long, value: Double): ForecastSample =

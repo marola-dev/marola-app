@@ -44,20 +44,11 @@ object Matcher:
             tolerance = if inst.network == Network.Metar then MetarToleranceS else 0L
             obs <- observed
               .getOrElse((inst.id, variable), Chunk.empty)
-              .map(o => (math.abs(o.validTime.getEpochSecond - valid.getEpochSecond), o))
+              .map(o => (math.abs(o.validTime.getEpochSecond - valid.getEpochSecond), o.value))
               .filter(_._1 <= tolerance)
               .minByOption(_._1)
           yield
-            val values = members.sortBy(_.member.getOrElse(0)).map(_.value)
-            Matched(
-              provider,
-              run,
-              point,
-              variable,
-              valid,
-              lead,
-              Score.strided(values, k),
-              obs._2.value
-            )
+            val values = Score.strided(members.sortBy(_.member.getOrElse(0)).map(_.value), k)
+            Matched(provider, run, point, variable, valid, lead, values, obs._2)
       }
       .to(Chunk)
