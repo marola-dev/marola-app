@@ -83,16 +83,15 @@ histories have not been read (MIP-0083 task 2, marola-app#64). Coordinates marke
 | id | Station | Coordinates | Exposure | Status of the facts |
 |---|---|---|---|---|
 | `sc-sbfl` | SBFL, Florianópolis airport (WMO 83899) | −27.671, −48.547, 5 m (v) | island airport in the path of winter cold fronts | likely to qualify ⚠ not measured |
-| `sc-a803` | A803, Florianópolis, INMET | ⚠ not read | ⚠ | code from #723; coordinates not read from INMET's catalogue |
+| `sc-a806` | A806, Florianópolis, INMET | −27.6025, −48.6200, 4.87 m (v) | ⚠ | operating since 2003-01-21 (v); #723 named A803, which the catalogue lists as Santa Maria (RS) |
 | `rj-sbrj` | SBRJ, Santos Dumont airport (WMO 83755) | −22.910, −43.163, 6 m (v) | inside Guanabara Bay | at risk under the exposure rule |
-| `rj-a652` | A652, Forte de Copacabana, INMET | ⚠ not read | ⚠ | code from memory in #723 |
+| `rj-a652` | A652, Forte de Copacabana, INMET | −22.98833, −43.19056, 25.59 m (v) | ⚠ | operating since 2007-05-17 (v) |
 | `rj-sbcb` | SBCB, Cabo Frio airport (WMO 83778) | −22.922, −42.074, 3 m (v) | open coast, strong north-east wind | the exposed alternative #723 asks to screen |
 | `rj-a606` | A606, Arraial do Cabo, INMET | −22.97528, −42.02139, 5 m (v) | cape on the open coast | operating since 2006-09-21 (v), the exposed alternative #723 asks to screen |
 | `ba-sbsv` | SBSV, Salvador airport (WMO 83248) | −12.911, −38.331, 9 m (v) | near the Atlantic shore; steady trade winds | gale days unknown ⚠ |
-| `ba-a401` | A401, Salvador, INMET | ⚠ not read | ⚠ | code from memory in #723 |
+| `ba-a401` | A401, Salvador, INMET | −13.00556, −38.50583, 47.56 m (v) | ⚠ | operating since 2000-05-12 (v) |
 | `ba-sbil` | SBIL, Ilhéus airport (WMO 83349) | −14.816, −39.033, 9 m (v) | airport on the open coast | added here as an exposed BA alternative, as #723 asks |
 
-Not checked yet ⚠: every anemometer height; the INMET codes A803, A652 and A401 and their
-coordinates (the catalogue was read only as far as Arraial do Cabo); whether INMET's API needs a
+Not checked yet ⚠: every anemometer height; the INMET stations' exposure; whether INMET's API needs a
 token; whether its hourly wind is a 10-minute or an hourly mean; which archive holds 5 years of
 METARs (aviationweather.gov keeps 15 days). Task 2 settles these before any point is screened.
