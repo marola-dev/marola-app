@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-test:
-    uses: marola-dev/marola-devkit/.github/workflows/scala-ci.yml@v0.7.0
+    uses: marola-dev/marola-devkit/.github/workflows/scala-ci.yml@v0.8.0
     with:
       # corpusFetch (build.sbt) puts corpus.version's release in .tmp/knowledge for RagOfflineSpec.
       sbt-tasks: 'corpusFetch scalafmtCheckAll "scalafixAll --check" compile test'
@@ -94,7 +94,7 @@ jobs:
         run: gh api repos/marola-dev/marola-site/dispatches -f event_type=site-data-updated || echo "could not dispatch to marola-site — its next scheduled build (≤ 3 h) will pick the coverage number up"
 
   python:
-    uses: marola-dev/marola-devkit/.github/workflows/python-ci.yml@v0.7.0
+    uses: marola-dev/marola-devkit/.github/workflows/python-ci.yml@v0.8.0
     with:
       ruff-version: "0.16.5"
       self-test-commands: |
@@ -106,7 +106,7 @@ jobs:
         scripts/build-resources-tarball.sh --self-test
 
   static:
-    uses: marola-dev/marola-devkit/.github/workflows/static-ci.yml@v0.7.0
+    uses: marola-dev/marola-devkit/.github/workflows/static-ci.yml@v0.8.0
     with:
       actionlint-version: "1.7.12"
       hadolint-version: "2.14.0"
@@ -115,12 +115,12 @@ jobs:
       # Every compose profile must still render (MIP-0010).
       extra-commands: |
         docker compose --profile mlflow --profile ollama --profile local config --quiet
-        git -c advice.detachedHead=false clone -q --depth 1 -b v0.7.0 https://github.com/marola-dev/marola-devkit /tmp/devkit && python3 /tmp/devkit/scripts/docs_lint.py .
+        git -c advice.detachedHead=false clone -q --depth 1 -b v0.8.0 https://github.com/marola-dev/marola-devkit /tmp/devkit && python3 /tmp/devkit/scripts/docs_lint.py .
 
   agents:
-    uses: marola-dev/marola-devkit/.github/workflows/agents-check.yml@v0.7.0
+    uses: marola-dev/marola-devkit/.github/workflows/agents-check.yml@v0.8.0
     with:
-      devkit-ref: v0.7.0
+      devkit-ref: v0.8.0
 
   # flake.lock pins what `nix develop` and the `dev` image resolve. Missing or stale fails this
   # job; the lock `nix flake lock` produced here is the flake-lock artifact to commit.
