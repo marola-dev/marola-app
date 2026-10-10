@@ -1,14 +1,15 @@
 package marola.experiment
 
 import java.nio.file.{Files, Path}
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.Connection
 import java.time.{Instant, LocalDate, OffsetDateTime, ZoneOffset}
 import java.util.Properties
 
 import scala.io.Source
-import scala.util.control.NoStackTrace
+import scala.util.Using
 
 import kyo.*
+import kyo.Structure.Value as V
 
 import marola.experiment.schema.*
 
@@ -45,11 +46,18 @@ final class LakeSamples private (conn: Connection, pageSize: Int) extends Sample
         val stage = s"stage_${t.name}"
         exec(s"CREATE OR REPLACE TEMP TABLE $stage AS SELECT * FROM lake.${t.name} LIMIT 0")
         try
-          val marks = Seq.fill(t.columns)("?").mkString(", ")
-          val ps = conn.prepareStatement(s"INSERT INTO $stage VALUES ($marks)")
+          val columns = columnsOf(stage)
+          val ps =
+            conn.prepareStatement(
+              s"INSERT INTO $stage VALUES (${columns.map(_ => "?").mkString(", ")})"
+            )
           try
             rows.foreach { a =>
-              t.write(Out(ps), a)
+              // An encoded record leaves a None out.
+              val present = fields(Structure.encode(a)(using t.schema)).toMap
+              columns.zipWithIndex.foreach((c, i) =>
+                ps.setObject(i + 1, toJdbc(present.getOrElse(c, V.Null)))
+              )
               ps.addBatch()
             }
             val _ = ps.executeBatch()
@@ -102,13 +110,25 @@ final class LakeSamples private (conn: Connection, pageSize: Int) extends Sample
       (params ++ after).zipWithIndex.foreach((v, i) => ps.setObject(i + 1, v))
       val rs = ps.executeQuery()
       try
+        val meta = rs.getMetaData
+        val n = meta.getColumnCount - t.order.size
+        val columns = Chunk.from((1 to n).map(meta.getColumnName))
         val out = Chunk.newBuilder[A]
         var last = Chunk.empty[AnyRef]
         while rs.next() do
-          out += t.read(In(rs))
-          last = Chunk.from((t.columns + 1 to t.columns + t.order.size).map(i => rs.getObject(i)))
+          val record =
+            V.Record(columns.zipWithIndex.map((c, i) => c -> fromJdbc(rs.getObject(i + 1))))
+          out += Structure.decode(record)(using t.schema).getOrThrow
+          last = Chunk.from((n + 1 to n + t.order.size).map(i => rs.getObject(i)))
         (out.result(), last)
       finally rs.close()
+    finally ps.close()
+
+  private def columnsOf(table: String): Chunk[String] =
+    val ps = conn.prepareStatement(s"SELECT * FROM $table LIMIT 0")
+    try
+      val meta = ps.getMetaData
+      Chunk.from((1 to meta.getColumnCount).map(meta.getColumnName))
     finally ps.close()
 
   private def exec(sql: String): Unit =
@@ -120,9 +140,6 @@ final class LakeSamples private (conn: Connection, pageSize: Int) extends Sample
 end LakeSamples
 
 object LakeSamples:
-
-  /** A row the lake holds that the schema cannot read back: a hand edit or a newer protocol. */
-  final class CorruptRow(msg: String) extends Exception(msg) with NoStackTrace
 
   def open(catalog: LakeCatalog, pageSize: Int): SampleStore < (Scope & Sync) =
     Scope
@@ -153,112 +170,58 @@ object LakeSamples:
         Option(file.toAbsolutePath.getParent).foreach(Files.createDirectories(_))
         Seq(s"ATTACH '${quote(file)}' AS lake")
     val st = conn.createStatement()
-    try (sql ++ ddl).foreach(st.execute(_))
+    try (sql :+ ddl).foreach(st.execute(_))
     finally st.close()
 
   private def quote(p: Path): String = p.toAbsolutePath.toString.replace("'", "''")
 
   // lake.sql is the schema's only copy (SchemaSpec checks it); made re-runnable here.
-  private lazy val ddl: Seq[String] =
-    val src = Source.fromResource("experiment/lake.sql", getClass.getClassLoader)
-    val text =
-      try src.getLines().filterNot(_.trim.startsWith("--")).mkString("\n")
-      finally src.close()
-    text
-      .split(';')
-      .toSeq
-      .map(_.trim)
-      .filter(_.nonEmpty)
-      .map(_.replaceFirst("CREATE TABLE (\\w+)", "CREATE TABLE IF NOT EXISTS lake.$1"))
+  private lazy val ddl: String =
+    Using
+      .resource(Source.fromResource("experiment/lake.sql", getClass.getClassLoader))(_.mkString)
+      .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS lake.")
 
   private def utc(t: Instant): OffsetDateTime = OffsetDateTime.ofInstant(t, ZoneOffset.UTC)
 
   private def between(column: String): String = s"$column >= ? AND $column < ?"
 
+  private def fields(v: Structure.Value): Chunk[(String, Structure.Value)] = v match
+    case V.Record(fs) => fs
+    case other        => throw IllegalArgumentException(s"not a lake row: $other")
+
+  private def toJdbc(v: Structure.Value): AnyRef = v match
+    case V.Str(s)     => s
+    case V.Integer(n) => Long.box(n)
+    case V.Decimal(d) => Double.box(d)
+    case V.Bool(b)    => Boolean.box(b)
+    case V.Instant(t) => utc(t)
+    case V.Null       => null
+    case other        => throw IllegalArgumentException(s"no lake column type for $other")
+
+  // kyo-schema reads a LocalDate from its ISO string.
+  private def fromJdbc(v: AnyRef): Structure.Value = v match
+    case null                 => V.Null
+    case s: String            => V.Str(s)
+    case b: java.lang.Boolean => V.Bool(b)
+    case n: java.lang.Integer => V.Integer(n.toLong)
+    case n: java.lang.Long    => V.Integer(n)
+    case d: java.lang.Double  => V.Decimal(d)
+    case t: OffsetDateTime    => V.Instant(t.toInstant)
+    case d: LocalDate         => V.Str(d.toString)
+    case other                => throw IllegalArgumentException(s"no field type for $other")
+
   /**
-   * One lake table: `write` and `read` follow lake.sql's column order, `key` is the natural key a
-   * write replaces on, and `order` is a total order over it for paging.
+   * One lake table, its rows read and written through the record's kyo-schema (column = wire
+   * field). `key` is the natural key a write replaces on, `order` a total order over it for paging.
    */
-  final private case class Table[A](
-      name: String,
-      columns: Int,
-      key: Chunk[String],
-      order: Chunk[String],
-      write: (Out, A) => Unit,
-      read: In => A
+  final private case class Table[A](name: String, key: Chunk[String], order: Chunk[String])(using
+      val schema: Schema[A]
   )
 
-  final private class Out(ps: PreparedStatement):
-    private var i = 0
-    private def next(): Int =
-      i += 1
-      i
-    def str(v: String): Unit = ps.setString(next(), v)
-    def strOpt(v: Option[String]): Unit = ps.setObject(next(), v.orNull)
-    def int(v: Int): Unit = ps.setInt(next(), v)
-    def intOpt(v: Option[Int]): Unit = ps.setObject(next(), v.map(Int.box).orNull)
-    def long(v: Long): Unit = ps.setLong(next(), v)
-    def dbl(v: Double): Unit = ps.setDouble(next(), v)
-    def bool(v: Boolean): Unit = ps.setBoolean(next(), v)
-    def ts(v: Instant): Unit = ps.setObject(next(), utc(v))
-    def tsOpt(v: Option[Instant]): Unit = ps.setObject(next(), v.map(utc).orNull)
-    def date(v: LocalDate): Unit = ps.setObject(next(), v)
-    def dateOpt(v: Option[LocalDate]): Unit = ps.setObject(next(), v.orNull)
-    def label(v: Labeled): Unit = str(v.label)
-
-  // Constructor arguments evaluate left to right, so `Record(in.str, in.ts, …)` reads in order.
-  final private class In(rs: ResultSet):
-    private var i = 0
-    private def next(): Int =
-      i += 1
-      i
-    def str: String = rs.getString(next())
-    def strOpt: Option[String] = Option(rs.getString(next()))
-    def int: Int = rs.getInt(next())
-    def intOpt: Option[Int] =
-      val v = rs.getInt(next())
-      if rs.wasNull() then None else Some(v)
-    def long: Long = rs.getLong(next())
-    def dbl: Double = rs.getDouble(next())
-    def bool: Boolean = rs.getBoolean(next())
-    def ts: Instant = rs.getObject(next(), classOf[OffsetDateTime]).toInstant
-    def tsOpt: Option[Instant] =
-      Option(rs.getObject(next(), classOf[OffsetDateTime])).map(_.toInstant)
-    def date: LocalDate = rs.getObject(next(), classOf[LocalDate])
-    def dateOpt: Option[LocalDate] = Option(rs.getObject(next(), classOf[LocalDate]))
-    def label[E <: Labeled](values: Array[E]): E =
-      val s = str
-      values.find(_.label == s).getOrElse(throw CorruptRow(s"unknown label '$s' in column $i"))
-
-  private val PointTable = Table[SamplingPoint](
-    "experiment_point",
-    7,
-    Chunk("id"),
-    Chunk("id"),
-    (o, p) => {
-      o.str(p.id)
-      o.dbl(p.lat)
-      o.dbl(p.lon)
-      o.label(p.kind)
-      o.strOpt(p.instrument)
-      o.date(p.addedOn)
-      o.dateOpt(p.retiredOn)
-    },
-    in =>
-      SamplingPoint(
-        in.str,
-        in.dbl,
-        in.dbl,
-        in.label(PointKind.values),
-        in.strOpt,
-        in.date,
-        in.dateOpt
-      )
-  )
+  private val PointTable = Table[SamplingPoint]("experiment_point", Chunk("id"), Chunk("id"))
 
   private val ForecastTable = Table[ForecastSample](
     "forecast_sample",
-    12,
     Chunk("provider", "run_init", "point", "lead_h", "variable", "member"),
     Chunk(
       "valid_time",
@@ -268,150 +231,28 @@ object LakeSamples:
       "lead_h",
       "variable",
       "coalesce(member, -1)"
-    ),
-    (o, s) => {
-      o.str(s.provider)
-      o.ts(s.runInit)
-      o.ts(s.fetchedAt)
-      o.str(s.point)
-      o.ts(s.validTime)
-      o.int(s.leadH)
-      o.label(s.variable)
-      o.intOpt(s.member)
-      o.dbl(s.value)
-      o.dbl(s.cellLat)
-      o.dbl(s.cellLon)
-      o.str(s.sourceUrl)
-    },
-    in =>
-      ForecastSample(
-        in.str,
-        in.ts,
-        in.ts,
-        in.str,
-        in.ts,
-        in.int,
-        in.label(Variable.values),
-        in.intOpt,
-        in.dbl,
-        in.dbl,
-        in.dbl,
-        in.str
-      )
+    )
   )
 
   private val ObservationTable = Table[ObservationSample](
     "observation_sample",
-    6,
     Chunk("instrument", "valid_time", "variable"),
-    Chunk("valid_time", "instrument", "variable"),
-    (o, s) => {
-      o.str(s.instrument)
-      o.ts(s.validTime)
-      o.label(s.variable)
-      o.dbl(s.value)
-      o.str(s.averaging)
-      o.bool(s.qcPassed)
-    },
-    in => ObservationSample(in.str, in.ts, in.label(Variable.values), in.dbl, in.str, in.bool)
+    Chunk("valid_time", "instrument", "variable")
   )
 
-  private val RunTable = Table[RunIndexRow](
-    "run_index",
-    7,
-    Chunk("provider", "run_init"),
-    Chunk("run_init", "provider"),
-    (o, r) => {
-      o.str(r.provider)
-      o.ts(r.runInit)
-      o.tsOpt(r.availableAt)
-      o.strOpt(r.contentSha)
-      o.label(r.state)
-      o.strOpt(r.reason)
-      o.tsOpt(r.fetchedAt)
-    },
-    in =>
-      RunIndexRow(
-        in.str,
-        in.ts,
-        in.tsOpt,
-        in.strOpt,
-        in.label(RunState.values),
-        in.strOpt,
-        in.tsOpt
-      )
-  )
+  private val RunTable =
+    Table[RunIndexRow]("run_index", Chunk("provider", "run_init"), Chunk("run_init", "provider"))
 
   private val ScoreTable = Table[ScoreCell](
     "score_cell",
-    12,
     Chunk("provider", "point", "variable", "lead_h", "bin", "day"),
-    Chunk("day", "provider", "point", "variable", "lead_h", "bin"),
-    (o, c) => {
-      o.str(c.provider)
-      o.str(c.point)
-      o.label(c.variable)
-      o.int(c.leadH)
-      o.str(c.bin)
-      o.date(c.day)
-      o.long(c.n)
-      o.dbl(c.sumE)
-      o.dbl(c.sumSqE)
-      o.dbl(c.sumAbsE)
-      o.dbl(c.sumCrps)
-      o.dbl(c.sumSqSpread)
-    },
-    in =>
-      ScoreCell(
-        in.str,
-        in.str,
-        in.label(Variable.values),
-        in.int,
-        in.str,
-        in.date,
-        in.long,
-        in.dbl,
-        in.dbl,
-        in.dbl,
-        in.dbl,
-        in.dbl
-      )
+    Chunk("day", "provider", "point", "variable", "lead_h", "bin")
   )
 
   private val PairTable = Table[PairCell](
     "pair_cell",
-    12,
     Chunk("provider_a", "provider_b", "point", "variable", "lead_h", "day"),
-    Chunk("day", "provider_a", "provider_b", "point", "variable", "lead_h"),
-    (o, c) => {
-      o.str(c.providerA)
-      o.str(c.providerB)
-      o.str(c.point)
-      o.label(c.variable)
-      o.int(c.leadH)
-      o.date(c.day)
-      o.long(c.n)
-      o.dbl(c.sumD)
-      o.dbl(c.sumSqD)
-      o.dbl(c.sumEaEb)
-      o.dbl(c.sumSqEa)
-      o.dbl(c.sumSqEb)
-    },
-    in =>
-      PairCell(
-        in.str,
-        in.str,
-        in.str,
-        in.label(Variable.values),
-        in.int,
-        in.date,
-        in.long,
-        in.dbl,
-        in.dbl,
-        in.dbl,
-        in.dbl,
-        in.dbl
-      )
+    Chunk("day", "provider_a", "provider_b", "point", "variable", "lead_h")
   )
 
 end LakeSamples
