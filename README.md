@@ -54,7 +54,7 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
 | `core/` | the pure pipeline, the shared HTTP/JSON helpers, the `LlmClient` / `VisionClient` / `SightingStore` traits |
 | `local/` | the Ollama-backed implementations and the local-file sighting store |
 | `cli/` | `Main`, `AppConfig`, the MCP and chat servers, the benchmark runner, the board writer |
-| `experiment/` | the forecast experiment (MIP-0083): its schemas and its ground-truth points, `ground-truth.json` and its loader |
+| `experiment/` | the forecast experiment (MIP-0083): its schemas, its ground-truth points (`ground-truth.json` and its loader) and the Open-Meteo forecast route |
 | `oods/src/test/resources/` | the OODS ingest's test fixtures (MIP-0056); its code lands here too |
 | `scripts/` | the corpus fetch, the resources tarball, the `site-data` push, Scaladoc post-processing, test fixtures |
 | `docs/` | this repo's design, library, development and reference pages, and its ADRs (`docs/adr/`) |
@@ -91,6 +91,8 @@ pinned in `corpus.version`. JDK 25 is required (Kyo).
   the embedder.
 - [Ground-truth points](docs/4-reference_ground-truth.md): the anemometers the forecast benchmark
   scores against, the strong-wind rule they must pass, and each candidate.
+- [Open-Meteo forecasts](docs/4-reference_open-meteo-forecasts.md): how the benchmark reads IFS
+  and GFS runs, and what was checked live.
 - [ADR-0001](docs/adr/0001-three-sbt-modules.md): why the build is three sbt modules, core, local
   and cli. [ADR-0002](docs/adr/0002-experiment-module.md): the forecast experiment as a fourth, `experiment`.
 - [AGENTS.md](https://github.com/marola-dev/marola-app/blob/main/AGENTS.md): what this repo is and
