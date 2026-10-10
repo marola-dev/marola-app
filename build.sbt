@@ -142,6 +142,7 @@ lazy val experiment = (project in file("experiment"))
     name := "marola-experiment",
     Compile / mainClass := Some("marola.experiment.Main"),
     assembly / mainClass := Some("marola.experiment.Main"),
+    assembly / assemblyOutputPath := target.value / "marola-experiment.jar",
     Compile / run / fork := true,
     Compile / run / baseDirectory := (ThisBuild / baseDirectory).value,
     Compile / run / javaOptions ++=
