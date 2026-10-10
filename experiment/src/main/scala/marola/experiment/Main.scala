@@ -26,7 +26,9 @@ object Flags:
   /** A throwaway lake and no MLflow run: fetch and score, keep nothing. */
   object dryRun extends StaticFlag[Boolean](false)
 
-/** `cycle`, `rescore [from until]` and `export` (MIP-0083 §5.6, §5.8). */
+/**
+ * `cycle`, `rescore [from until]`, `predictions [from until]` and `export` (MIP-0083 §5.6, §5.8).
+ */
 object Main:
 
   def main(args: Array[String]): Unit =
@@ -45,10 +47,7 @@ object Main:
         deps.map(d =>
           Env.run(d) {
             Clock.now.map { now =>
-              val today = LocalDate.ofInstant(now.toJava, ZoneOffset.UTC)
-              val (from, until) = range match
-                case List(f, u) => (LocalDate.parse(f), LocalDate.parse(u))
-                case _          => (today.minusDays(Cycle.RescoredDays - 1L), today.plusDays(1))
+              val (from, until) = days(range, now.toJava)
               Cycle
                 .rescore(from, until)
                 .map(s =>
@@ -64,13 +63,42 @@ object Main:
             }
           }
         )
+      case "predictions" :: range if range.size == 0 || range.size == 2 =>
+        deps.map(d =>
+          Env.run(d) {
+            Clock.now.map { now =>
+              val (from, until) = days(range, now.toJava)
+              Cycle
+                .predictions(from, until)
+                .map(rows =>
+                  Sync.defer {
+                    Files.createDirectories(d.out)
+                    Files.writeString(
+                      d.out.resolve(Export.PredictionsFile),
+                      Export.predictionsCsv(rows)
+                    )
+                    0
+                  }
+                )
+            }
+          }
+        )
       case List("export") =>
         deps.map(Env.run(_)(Clock.now.map(n => Export.write(n.toJava)))).map(_ => 0)
       case _ =>
         Sync.defer {
-          java.lang.System.err.println("usage: cycle | rescore [from until] | export")
+          java.lang.System.err
+            .println("usage: cycle | rescore [from until] | predictions [from until] | export")
           2
         }
+
+  /** `[from, until)` from two ISO dates, or the days a cycle rescores. */
+  private def days(range: List[String], now: Instant): (LocalDate, LocalDate) =
+    range match
+      case List(f, u) => (LocalDate.parse(f), LocalDate.parse(u))
+      case _ =>
+        val today = LocalDate.ofInstant(now, ZoneOffset.UTC)
+        (today.minusDays(Cycle.RescoredDays - 1L), today.plusDays(1))
 
   def catalog(path: String): LakeCatalog =
     if path.endsWith(".duckdb") then LakeCatalog.DuckDbFile(Path.of(path))

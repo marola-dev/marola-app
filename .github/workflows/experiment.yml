@@ -78,10 +78,12 @@ jobs:
           key: experiment-state-${{ github.run_id }}
 
       # The export reaches site-data only once a point is scored (§5.8); until then, the run's
-      # files are kept here.
+      # files are kept here, with mlflow.db for `mlflow ui` (the cache cannot be downloaded).
       - if: always()
         uses: actions/upload-artifact@v7
         with:
           name: experiment-${{ github.run_id }}
-          path: .tmp/experiment/out
+          path: |
+            .tmp/experiment/out
+            .tmp/experiment/mlflow.db
           retention-days: 14
