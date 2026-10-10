@@ -10,8 +10,6 @@ import marola.experiment.schema.{ForecastSample, Provider, RunIndexRow, Sampling
 trait ForecastSource:
   def provider: Provider
 
-  def latestRun(using Frame): Maybe[Instant] < (Async & Abort[FetchError])
-
   /** The run pinned by its init time (§5.14 rule 2), whatever is newest now. */
   def fetch(run: Instant, points: Chunk[SamplingPoint])(using
       Frame
