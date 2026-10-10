@@ -53,8 +53,7 @@ object OpenMeteoForecasts:
   final case class Metadata(init: Instant, availableAt: Instant) derives CanEqual
 
   def parseMetadata(url: String, body: String): Either[FetchError, Metadata] =
-    val json = parseJson(url, body)
-    json.flatMap { j =>
+    parseJson(url, body).flatMap { j =>
       (j("last_run_initialisation_time").num, j("last_run_availability_time").num) match
         case (Some(init), Some(available)) =>
           Right(
@@ -180,7 +179,7 @@ object OpenMeteoForecasts:
     catch case e: JsonValue.JsonParseException => Left(FetchError.Malformed(url, e.getMessage))
 
   /** A failure worth another attempt: a 429, a 5xx, or no response at all. */
-  final private case class Transient(status: Maybe[Int], url: String, detail: String)
+  final private case class Transient(status: Maybe[Int], detail: String)
 
   final private case class Impl(
       provider: Provider,
@@ -206,10 +205,10 @@ object OpenMeteoForecasts:
         Frame
     ): Nothing < Abort[Transient | FetchError] = e match
       case e: Http.HttpError if e.status == 429 || e.status >= 500 =>
-        Abort.fail(Transient(Maybe(e.status), url, e.bodySnippet))
+        Abort.fail(Transient(Maybe(e.status), e.bodySnippet))
       case e: Http.HttpError => Abort.fail(FetchError.Status(e.status, url, e.bodySnippet))
       // A connect or TLS failure before any response: seen live from this route on 2026-10-09.
-      case e: java.io.IOException => Abort.fail(Transient(Maybe.empty, url, e.toString))
+      case e: java.io.IOException => Abort.fail(Transient(Maybe.empty, e.toString))
       case e                      => Abort.panic(e)
 
     private def get(url: String)(using Frame): String < (Async & Abort[FetchError]) =
@@ -222,9 +221,6 @@ object OpenMeteoForecasts:
     def metadata(using Frame): Metadata < (Async & Abort[FetchError]) =
       val url = metadataUrl(provider.modelId)
       get(url).map(body => Abort.get(parseMetadata(url, body)))
-
-    def latestRun(using Frame): Maybe[Instant] < (Async & Abort[FetchError]) =
-      metadata.map(m => Maybe(m.init))
 
     private def points(
         run: Instant,
@@ -277,46 +273,22 @@ object OpenMeteoForecasts:
     def backfill(run: Instant, pts: Chunk[SamplingPoint], earlier: Chunk[RunIndexRow])(using
         Frame
     ): Collected < (Async & Abort[FetchError]) =
-      Abort.run[FetchError](fetch(run, pts)).map {
-        case Result.Success(samples) =>
-          val sha = contentSha(samples)
-          val differs = earlier.find(r => r.runInit == run && r.contentSha.exists(_ != sha))
-          now.map { at =>
-            Collected(
-              Chunk(
-                RunIndexRow(
-                  provider.id,
-                  run,
-                  None,
-                  Some(sha),
-                  RunState.Backfilled,
-                  differs.map(r =>
-                    s"content_sha differs from the ${r.state.label} copy ${r.contentSha.getOrElse("")}"
-                  ),
-                  Some(at)
-                )
-              ),
-              samples
-            )
-          }
-        case Result.Failure(e) =>
-          now.map(at =>
-            Collected(
-              Chunk(
-                RunIndexRow(
-                  provider.id,
-                  run,
-                  None,
-                  None,
-                  RunState.Missing,
-                  Some(e.reason),
-                  Some(at)
-                )
-              ),
-              Chunk.empty
-            )
-          )
-        case panic: Result.Panic => Abort.error(panic)
+      Abort.run[FetchError](fetch(run, pts)).map { result =>
+        now.map { at =>
+          def row(sha: Option[String], state: RunState, reason: Option[String]) =
+            RunIndexRow(provider.id, run, None, sha, state, reason, Some(at))
+          result match
+            case Result.Success(samples) =>
+              val sha = contentSha(samples)
+              val differs = earlier.find(r => r.runInit == run && r.contentSha.exists(_ != sha))
+              val reason = differs.map(r =>
+                s"content_sha differs from the ${r.state.label} copy ${r.contentSha.getOrElse("")}"
+              )
+              Collected(Chunk(row(Some(sha), RunState.Backfilled, reason)), samples)
+            case Result.Failure(e) =>
+              Collected(Chunk(row(None, RunState.Missing, Some(e.reason))), Chunk.empty)
+            case panic: Result.Panic => Abort.error(panic)
+        }
       }
 
     def collect(known: Chunk[RunIndexRow], pts: Chunk[SamplingPoint])(using
@@ -332,19 +304,15 @@ object OpenMeteoForecasts:
         at <- now
         settled = !at.isBefore(meta.availableAt.plus(SettleTime))
         expected = expectedRuns(provider, after, meta.init).filter(r => settled || r != meta.init)
-        sampled <-
-          if expected.contains(meta.init) then Abort.run[FetchError](latest(meta, pts))
-          else Kyo.lift(Result.succeed[FetchError, Collected](Collected(Chunk.empty, Chunk.empty)))
-        _ <- sampled match
-          case panic: Result.Panic => Abort.error(panic)
-          case _                   => Kyo.unit
         // A latest run that failed or changed under the fetch is read again by its init time.
-        rest = sampled match
-          case Result.Success(c) if c.runs.nonEmpty => expected.filter(_ != meta.init)
-          case _                                    => expected
+        sampled <-
+          if expected.contains(meta.init) then
+            Abort.recover[FetchError](_ => Maybe.empty[Collected])(latest(meta, pts).map(Maybe(_)))
+          else Kyo.lift(Maybe.empty[Collected])
+        rest = if sampled.isDefined then expected.filter(_ != meta.init) else expected
         filled <- Kyo.foreach(rest)(backfill(_, pts, mine))
       yield
-        val all = sampled.toMaybe.toChunk ++ filled
+        val all = sampled.toChunk ++ filled
         Collected(all.flatMap(_.runs).sortBy(_.runInit), all.flatMap(_.samples))
       end for
     end collect
