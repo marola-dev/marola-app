@@ -16,7 +16,9 @@ but nothing on the recommendation path calls it, and it runs from its own schedu
 
 `build.sbt` gets a fourth project, `experiment` (`marola-experiment`), aggregated by `root`. It
 depends on `core` now and adds `local` when the cycle logs to MLflow (MIP-0083 task 7). `cli` does
-not depend on it. Its own dependencies are `kyo-schema`, `kyo-schema-json` and `kyo-config`.
+not depend on it. Its own dependencies are `kyo-schema`, `kyo-schema-json`, `kyo-config` and
+`duckdb_jdbc`, the engine of its `SampleStore` (MIP-0083 §5.6), which lives here with its
+local-lake implementation `LakeSamples` until MIP-0075's B2 store replaces it.
 
 ## Consequences
 
