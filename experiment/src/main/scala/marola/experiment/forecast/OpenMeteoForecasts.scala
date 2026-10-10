@@ -253,7 +253,8 @@ object OpenMeteoForecasts:
       for
         samples <- points(run, pts, latestUrl(provider, protocol, _, run), startsAt)
         after <- metadata
-        _ <- Abort.when(after.init != run)(FetchError.RunChanged(run, after.init))
+        // An older init is a server that has not caught up yet, not a new run.
+        _ <- Abort.when(after.init.isAfter(run))(FetchError.RunChanged(run, after.init))
       yield Collected(
         Chunk(
           RunIndexRow(

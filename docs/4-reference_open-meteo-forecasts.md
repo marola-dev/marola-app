@@ -8,7 +8,7 @@ The forecast experiment's `open_meteo` route
 | Call | URL | Used for |
 |---|---|---|
 | Metadata | `https://api.open-meteo.com/data/<model_id>/static/meta.json` | `last_run_initialisation_time` (the run) and `last_run_availability_time` (a run is read 10 minutes after it) |
-| Latest run | `https://api.open-meteo.com/v1/forecast?…&start_hour=<init + first lead>&end_hour=<init + last lead>` | the run the metadata names, kept only if the metadata names the same run after the fetch |
+| Latest run | `https://api.open-meteo.com/v1/forecast?…&start_hour=<init + first lead>&end_hour=<init + last lead>` | the run the metadata names, kept unless the metadata names a newer run after the fetch (its servers update apart, so an older one is a lagging server) |
 | Single run | `https://single-runs-api.open-meteo.com/v1/forecast?…&run=<init>&forecast_hours=<last lead + 1>` | a missed run, or a latest run that changed under the fetch; its series must start at `<init>` |
 
 Both forecast calls send `cell_selection=nearest`, `wind_speed_unit=ms`, `timeformat=unixtime`
