@@ -92,6 +92,33 @@ histories have not been read (MIP-0083 task 2, marola-app#64). Coordinates marke
 | `ba-a401` | A401, Salvador, INMET | −13.00556, −38.50583, 47.56 m (v) | ⚠ | operating since 2000-05-12 (v) |
 | `ba-sbil` | SBIL, Ilhéus airport (WMO 83349) | −14.816, −39.033, 9 m (v) | airport on the open coast | added here as an exposed BA alternative, as #723 asks |
 
-Not checked yet ⚠: every anemometer height; the INMET stations' exposure; whether INMET's API needs a
-token; whether its hourly wind is a 10-minute or an hourly mean; which archive holds 5 years of
-METARs (aviationweather.gov keeps 15 days). Task 2 settles these before any point is screened.
+Not checked yet ⚠: every anemometer height; the INMET stations' exposure; which archive holds 5
+years of METARs (aviationweather.gov keeps 15 days). Task 2 settles these before any point is
+screened.
+
+## Observation sources
+
+What the benchmark reads for each instrument kind (marola-app#67, `Observations.scala`). Checked
+2026-10-09.
+
+- **METAR**: `https://aviationweather.gov/api/data/metar?ids=SBFL,…&format=json&hours=N`, no key
+  (v, fetched). Wind arrives in knots and is stored in m/s (× 1852/3600); a `VRB` direction or a
+  speed under 2 m/s stores no direction. The wind is labelled `10min_mean`, the averaging ICAO
+  Annex 3 sets for METAR ⚠ (the annex was not re-read), and the temperature `instant`.
+- **INMET**: the station catalogue (`/estacoes/T`) needs no key, but hourly data is served only on
+  the token route `https://apitempo.inmet.gov.br/token/estacao/<from>/<to>/<station>/<token>`: a
+  wrong key gets `CHAVE INVÁLIDA!`, and the keyless `/estacao/<from>/<to>/<station>` returns an
+  empty body (v, fetched). The token is requested from INMET; there is no self-service sign-up (⚠,
+  reported by third parties, not by INMET). Without `INMET_TOKEN` the client logs why and skips, so
+  METAR points run meanwhile. INMET answers only Brazilian addresses for most hosts; this check was
+  made through a fetcher, not from a GitHub runner ⚠. Wind is a 10-minute mean (`10min_mean`) and
+  temperature a 1-minute mean (`1min_mean`), per INMET's
+  [Nota Técnica 001/2011](https://www.cemtec.ms.gov.br/wp-content/uploads/2019/02/Nota_Tecnica-Rede_estacoes_INMET.pdf)
+  ("Relatórios meteorológicos usam valores médios de 10 minutos"; temperature's "instantâneo" is "a
+  média de um minuto"), on a 10 m mast (v). The hourly field names (`VEN_VEL`, `VEN_DIR`, `TEM_INS`,
+  `DT_MEDICAO`, `HR_MEDICAO` in UTC as `HHMM`) come from the `inmetpy` client ⚠ until a token lets a
+  real response be recorded; the test fixture is that shape, not a recording.
+- **Niño-3.4**: CPC's weekly OISST indices against 1991–2020,
+  `https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for` (v, fetched): fixed-width columns,
+  Niño-3.4 SST and anomaly in °C per week centre (2026-09-30: 29.9 °C, +3.2 °C). It is one value
+  for the basin, stored beside each cycle, not an `ObservationSample`.
