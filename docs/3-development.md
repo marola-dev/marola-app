@@ -196,11 +196,10 @@ together.
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR; push to `main` | The merge gates: `build-test` (devkit `scala-ci`: `corpusFetch`, scalafmt, scalafix, compile, test), `python` (ruff and the scripts' self-tests), `static` (actionlint, hadolint, shellcheck, compose config, `docs-lint`), `agents` (the AGENTS.md invariants block) and `flake-lock` (`flake.lock` is current). On `main` only, `coverage` (above) |
+| [`ci.yml`](../.github/workflows/ci.yml) | PR; push to `main` | The merge gates: `build-test` (devkit `scala-ci`: `corpusFetch`, scalafmt, scalafix, compile, test), `python` (ruff and the scripts' self-tests), `static` (actionlint, hadolint, shellcheck, compose config, `docs-lint`), `agents` (the AGENTS.md invariants block) and `flake-lock` (`flake.lock` is current), and `api-docs` (devkit `api-docs` running `just api-docs`: a check on a PR, force-pushed to the `api-docs` branch from `main`, [API reference](4-reference_api.md)). On `main` only, `coverage` (above) |
 | [`docker.yml`](../.github/workflows/docker.yml) | PR and push to `main` touching the image's inputs; dispatch | hadolint and compose config, then the `jvm` and `native` images (and `dev` on request), each with a start-up check; pushes only from `main` |
 | [`docker-smoke.yml`](../.github/workflows/docker-smoke.yml) | daily 09:30 UTC; dispatch (`lat`/`lon` or `maps_url`, `model`, `image`) | Runs `--summarize` in the published image against a cached `llama3.2:1b`; `scripts/smoke_record.py` records it as `smoke/` on marola-site's `site-data`, which the map's footer shows as "Last live run". Fails when the pipeline, the model or the reviewer did not answer |
 | [`marola-e2e.yml`](../.github/workflows/marola-e2e.yml) | dispatch | `E2ESpec` live (above) |
-| [`api-docs.yml`](../.github/workflows/api-docs.yml) | PR; push to `main` | Devkit `api-docs` running `just api-docs`: a check on a PR, force-pushed to the `api-docs` branch from `main` ([API reference](4-reference_api.md)) |
 | [`release.yml`](../.github/workflows/release.yml) | `v*` tag | The release asset (below) |
 | [`notify-umbrella.yml`](../.github/workflows/notify-umbrella.yml) | push to `main` | Dispatches `submodule-updated` to the umbrella's pointer-sync, and `submodule-docs-updated` (docs rebuild) when `README.md` or `docs/**` changed; without the token, a notice and the umbrella's daily cron |
 | [`pr.yml`](../.github/workflows/pr.yml) | PR events | Devkit `pr-body` fills the description from the commits; devkit `ci-short-circuit` cancels a closed, unmerged PR's runs |
@@ -238,9 +237,9 @@ image is not tied to tags; every qualifying `main` push publishes it.
 
 | Secret | Used by | For |
 |---|---|---|
-| `GITHUB_TOKEN` | `docker.yml`, `docker-smoke.yml`, `release.yml`, `api-docs.yml` | pushing and pulling the image, attaching release assets, pushing the `api-docs` branch |
+| `GITHUB_TOKEN` | `docker.yml`, `docker-smoke.yml`, `release.yml`, `ci.yml`'s `api-docs` job | pushing and pulling the image, attaching release assets, pushing the `api-docs` branch |
 | `MAROLA_CROSS_REPO_PAT` (org secret) | `ci.yml`, `docker-smoke.yml`, `notify-umbrella.yml` | pushing `coverage/` and `smoke/` to marola-site's `site-data` and dispatching its rebuild; dispatching the umbrella's pointer-sync and docs build |
-| `STEWARD_GH_TOKEN` | `scala-steward.yml` | opening dependency PRs; the fallback `GITHUB_TOKEN` is refused by the org's Actions policy (marola-dev/marola#496) |
+| `PR_BOT_KEY` (secret), `PR_BOT_APP_ID` (variable) | `scala-steward.yml` | marola-pr-bot's key and App id; the job mints a one-hour token to open dependency PRs, which start CI (MIP-0086) |
 
 Locally, secrets go in the gitignored `.env`, never in code: direnv's `.envrc` and compose's
 `env_file` load it, `nix develop` does not. `.env.example` holds placeholders only

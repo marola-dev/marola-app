@@ -10,8 +10,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   scala-steward:
@@ -19,6 +18,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-java@v6
         with:
@@ -27,6 +28,19 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-      - uses: scala-steward-org/scala-steward-action@v2
+      # A token, not the App key: a compromised Steward release then holds a credential for an hour.
+      - name: marola-pr-bot token
+        id: bot
+        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.10.0
         with:
-          github-token: ${{ secrets.STEWARD_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          app-id: ${{ vars.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_KEY }}
+          repositories: marola-app
+          permission-contents: write
+          permission-pull-requests: write
+
+      - uses: scala-steward-org/scala-steward-action@3e5cae868160200afda12b57c150e56cede989ab # v2.97.0
+        with:
+          github-token: ${{ steps.bot.outputs.token }}
+          author-name: ${{ steps.bot.outputs.user-name }}
+          author-email: ${{ steps.bot.outputs.user-email }}
