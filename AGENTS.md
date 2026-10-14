@@ -13,7 +13,7 @@ Non-negotiable in every marola repo; a repo may make these stricter, never loose
 - **Cost and deployment safety**: never provision or deploy a paid cloud resource without explicit human confirmation first ([AGENTS.md](AGENTS.md#cost--deployment-safety-hard-rule)).
 - **No secrets in code**: never hardcode a key/connection string/secret; `.env.example` holds placeholders only ([AGENTS.md](AGENTS.md#cost--deployment-safety-hard-rule)).
 - **The agent-ready gate**: an agent may only begin implementation on an issue carrying `agent-ready` ([AGENTS.md](AGENTS.md#issue-tracking-hard-rule)).
-- **The three commit trailers**: commits carry three trailers and nothing else — `Tested:`, `Cost:`, and `Co-Authored-By: Claude <noreply@anthropic.com>` ([AGENTS.md](AGENTS.md#attribution-and-cost-accounting-hard-rule)).
+- **The two commit trailers**: commits carry two trailers and nothing else — `Tested:` and `Co-Authored-By: Claude <noreply@anthropic.com>` ([AGENTS.md](AGENTS.md#attribution-hard-rule)).
 - **Phase discipline**: work one phase at a time; never start a later phase before the current one is done ([AGENTS.md](AGENTS.md#phase-discipline-hard-rule)).
 <!-- invariants:end -->
 
@@ -29,10 +29,17 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 - `cli/`: `Main`, `AppConfig` (settings from env vars), the MCP tool server, the benchmark runner,
   `--site`'s board writer. Use `sbt cli/run` / `cli/runMain …`, not `sbt run` at the root (a pure
   aggregate with no source of its own).
+- `experiment/`: the forecast experiment (MIP-0083, ADR-0002): its schemas (`schema/`, kyo-schema,
+  with the lake DDL and the scorecard's JSON Schema under `src/main/resources/experiment/`), its
+  ground-truth points, `ground-truth.json`, documented in `docs/4-reference_ground-truth.md`, and
+  `SampleStore` with `LakeSamples`, the local DuckLake (or plain DuckDB file) the samples go to,
+  and `Main`'s `cycle`, `rescore` and `export` (`docs/4-reference_experiment-cycle.md`).
 - `oods/src/test/resources/`: the OODS ingest's test fixtures (MIP-0056); its code lands here too.
-- `docs/1-Using-marola/`, `docs/2-Building-marola/`: the user and build docs, mounted at the root
-  of docs.marola.dev by the umbrella, so their URLs and their relative links into the umbrella's
-  pages (`../MIPs/…`, `../4-Research-and-plans/…`) resolve there.
+- `README.md` (the landing) and `docs/`: this repo's numbered pages (`1-design*`, `2-libraries*`,
+  `3-development`, `4-reference*`) and ADRs (`docs/adr/`), mounted by the umbrella at
+  docs.marola.dev/5-Repos/marola-app/ (MIP-0074 §5.2). Links stay relative inside the repo and use
+  absolute `https://docs.marola.dev/…` URLs for the umbrella's pages; user and system pages (Run
+  it locally, Telegram setup, Architecture) live there.
 
 ## What it consumes and produces
 
@@ -43,7 +50,7 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 | app → site `site-data` | `coverage/` (`ci.yml` on `main`) and `smoke/` (`docker-smoke.yml`), pushed with `MAROLA_CROSS_REPO_PAT` |
 | app → ml | the same image (`--benchmark`) and `ml-resources-<tag>.tar.gz` on each `v*` release (`release.yml`, `scripts/build-resources-tarball.sh`) |
 | ml → app | the compiled-prompt JSON, as a bot PR into `core/src/main/resources/` |
-| app → umbrella | `README.md` + `docs/` (`notify-umbrella.yml`) and `api-docs.tar.gz` (Scaladoc) on each `v*` release |
+| app → umbrella | `README.md` + `docs/` (`notify-umbrella.yml`); Scaladoc (`just api-docs`) on the `api-docs` branch from every `main` push (`ci.yml`'s `api-docs` job) |
 
 No repo reads another's tree, and this repo's CI never builds a consumer (MIP-0070 §5.4).
 
@@ -55,7 +62,8 @@ just                 # list all recipes
 just build           # sbt compile
 just test            # corpus-fetch, then sbt test
 just quality         # quality-scala (scalafmt + scalafix) and quality-other (ruff, shellcheck,
-                     # the scripts' self-tests, actionlint, hadolint, agents-check)
+                     # the scripts' self-tests, actionlint, hadolint, agents-check,
+                     # docs-lint)
 just fmt             # scalafmtAll
 just run -- --brief  # the CLI; `just mcp-server` for the MCP tool server
 just e2e             # the live E2E test (Overpass/Open-Meteo/Ollama), excluded from `just test`
@@ -74,8 +82,8 @@ Kyo's pre-1.0 API surface.
 ## Releases
 
 A `v*` tag (a human's act: `git tag` and `gh release` are denied in `.claude/settings.json`) runs
-`release.yml`, which attaches `api-docs.tar.gz` and `ml-resources-<tag>.tar.gz` and never
-replaces an asset already there. The image is not tied to tags: every `main` push publishes
+`release.yml`, which attaches `ml-resources-<tag>.tar.gz` and never replaces an asset already
+there. The image is not tied to tags: every `main` push publishes
 `:jvm` and `:jvm-<sha>`, and consumers pin the digest.
 
 ## Phase discipline (hard rule)
@@ -95,10 +103,10 @@ An agent starts work only on an issue carrying `agent-ready`, in this repo (MIP-
 Propose the change, state the expected cost, wait for a go-ahead. Never hardcode a
 key/connection string/secret; `.env.example` holds placeholders only.
 
-## Attribution and cost accounting (hard rule)
+## Attribution (hard rule)
 
-Commits carry `Tested:`, `Cost:` and `Co-Authored-By: Claude <noreply@anthropic.com>` and nothing
-else, as in the umbrella; `just pr` fills a missing trailer and writes the PR body.
+Commits carry `Tested:` and `Co-Authored-By: Claude <noreply@anthropic.com>` and nothing else, as
+in the umbrella; `just pr` fills a missing trailer and writes the PR body.
 
 ## Code style
 

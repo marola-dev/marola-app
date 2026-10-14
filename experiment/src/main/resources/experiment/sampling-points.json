@@ -1,0 +1,11 @@
+[
+  {"id": "sc-sbfl", "lat": -27.671, "lon": -48.547, "kind": "station", "instrument": "sc-sbfl", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "rj-sbrj", "lat": -22.91, "lon": -43.163, "kind": "station", "instrument": "rj-sbrj", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "rj-sbcb", "lat": -22.922, "lon": -42.074, "kind": "station", "instrument": "rj-sbcb", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "rj-a606", "lat": -22.97527777, "lon": -42.02138888, "kind": "station", "instrument": "rj-a606", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "ba-sbsv", "lat": -12.911, "lon": -38.331, "kind": "station", "instrument": "ba-sbsv", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "ba-sbil", "lat": -14.816, "lon": -39.033, "kind": "station", "instrument": "ba-sbil", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "sc-a806", "lat": -27.6025, "lon": -48.61999999, "kind": "station", "instrument": "sc-a806", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "rj-a652", "lat": -22.98833333, "lon": -43.19055555, "kind": "station", "instrument": "rj-a652", "added_on": "2026-10-09", "retired_on": null},
+  {"id": "ba-a401", "lat": -13.00555555, "lon": -38.50583333, "kind": "station", "instrument": "ba-a401", "added_on": "2026-10-09", "retired_on": null}
+]

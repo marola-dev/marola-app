@@ -40,7 +40,7 @@ quality-scala:
 quality-other:
     #!/usr/bin/env bash
     set -euo pipefail
-    for tool in ruff shellcheck actionlint hadolint agents-check; do command -v "$tool" >/dev/null || { echo "quality-other: $tool not installed — run inside 'nix develop'" >&2; exit 1; }; done
+    for tool in ruff shellcheck actionlint hadolint agents-check docs-lint; do command -v "$tool" >/dev/null || { echo "quality-other: $tool not installed — run inside 'nix develop'" >&2; exit 1; }; done
     just --list >/dev/null
     ruff check .
     ruff format --check .
@@ -54,6 +54,7 @@ quality-other:
     actionlint
     hadolint Dockerfile
     agents-check
+    docs-lint
     if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then docker compose --profile mlflow --profile ollama --profile local config --quiet && echo "docker compose config: ok"; else echo "docker compose not installed — skipping compose config check"; fi
 
 quality-fix:
@@ -139,6 +140,26 @@ ollama-up model=env_var_or_default("MAROLA_LOCAL_LLM_MODEL", "llama3.2") embed=e
 resources-tarball tag:
     scripts/build-resources-tarball.sh .tmp/ml-resources-{{ tag }}.tar.gz
 
+# Run by the devkit's api-docs.yml (MIP-0074 §5.2); docs.marola.dev serves script-src 'self'.
+# Scaladoc, one tree per module, into <out>/scala/{core,local,cli}, third-party scripts stripped.
+api-docs out:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out="{{ out }}"
+    # sbt's boot socket lives here; under a long checkout path (CI's runner) the justfile's
+    # .tmp/sbt-runtime overflows the unix socket path limit.
+    XDG_RUNTIME_DIR="$(mktemp -d /tmp/sbt.XXXXXX)"
+    export XDG_RUNTIME_DIR
+    trap 'rm -rf "$XDG_RUNTIME_DIR"' EXIT
+    sbt core/doc local/doc cli/doc
+    rm -rf "$out/scala"
+    for m in core local cli; do
+        mkdir -p "$out/scala/$m"
+        cp -r "$m"/target/scala-*/api/. "$out/scala/$m/"
+    done
+    python3 scripts/strip_external_scripts.py "$out/scala"
+    python3 scripts/strip_external_scripts.py --check "$out"
+
 # Build the CLI image. target=jvm (default), dev or native. MIP-0008.
 docker-build target="jvm": corpus-fetch
     docker build --target {{ target }} -t marola:{{ target }} .
@@ -166,3 +187,16 @@ mlflow-up:
 
 mlflow-down:
     docker compose --profile mlflow down
+
+# MIP-0083: one forecast-benchmark cycle into the local lake (.tmp/experiment/lake), logged to
+# the MLflow of `just mlflow-up`. MAROLA_EXPERIMENT_FLAGS_DRYRUN=true keeps nothing.
+experiment-cycle:
+    MAROLA_EXPERIMENT_FLAGS_MLFLOWURI="${MAROLA_EXPERIMENT_FLAGS_MLFLOWURI-http://127.0.0.1:5000}" \
+        sbt "experiment/run cycle"
+
+# The last cycle's days rebuilt from the lake alone; run the same UTC day as the cycle, the two
+# files must match.
+experiment-rescore:
+    sbt "experiment/run rescore"
+    diff .tmp/experiment/out/scores.json .tmp/experiment/out/rescore.json
+

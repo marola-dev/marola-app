@@ -137,9 +137,22 @@ object BeachFinder:
               queryOverpass(query, rest)
           }
 
+  /**
+   * OSM has `natural=beach` on playgrounds, clubs and lagoon sand. A denylist rather than "must
+   * start with Praia": Jurerê, Mar Grande and Ponta do Capim are real beaches.
+   */
+  private val GenericNames = Set("praia", "beach", "playa", "plage")
+  private val NotABeach = "(?i).*(playgr|parquinho|parque|\\bclube?\\b|condom).*".r
+  // Sand on Lagoa Rodrigo de Freitas, not the sea.
+  private val NamedJunk = Set("point cap ferrat")
+
+  def isJunkName(name: String): Boolean =
+    val n = name.trim.toLowerCase
+    n.count(_.isLetter) < 3 || GenericNames(n) || NamedJunk(n) || NotABeach.matches(n)
+
   private def parseElement(el: JsonValue, origin: Coordinates): Option[Beach] =
     val name = el("tags")("name").str.getOrElse("")
-    if name.isEmpty then None
+    if name.isEmpty || isJunkName(name) then None
     else
       for
         lat <- el("lat").num.orElse(el("center")("lat").num)

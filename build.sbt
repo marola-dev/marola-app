@@ -1,8 +1,9 @@
-// REQUIRES JDK 25: Kyo 1.0.0-RC5's artifacts are compiled for class-file version 69, so both the
+// REQUIRES JDK 25: Kyo 1.0.0-RC7's artifacts are compiled for class-file version 69, so both the
 // JVM running sbt and the runtime executing the jar must be 25+ (flake.nix and the Dockerfile pin
 // it). An older JVM fails with `UnsupportedClassVersionError: kyo/Frame$package$Frame$`.
 //
-// Modules: core (pure pipeline), local (Ollama path), cli (wires them together).
+// Modules: core (pure pipeline), local (Ollama path), cli (wires them together), experiment (the
+// forecast benchmark, MIP-0083; ADR-0002).
 
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / version := "0.1.0-SNAPSHOT"
@@ -12,7 +13,7 @@ ThisBuild / organization := "com.marola"
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-val kyoVersion = "1.0.0-RC5"
+val kyoVersion = "1.0.0-RC7"
 
 val munitFramework = new TestFramework("munit.Framework")
 
@@ -37,12 +38,14 @@ lazy val baseSettings = Seq(
     "io.getkyo" %% "kyo-core" % kyoVersion,
     "io.getkyo" %% "kyo-direct" % kyoVersion, // direct-style (.now / defer) syntax
     "io.getkyo" %% "kyo-combinators" % kyoVersion,
+    // MIP-0077: not used yet; kyo-schema-json pulls kyo-schema.
+    "io.getkyo" %% "kyo-schema-json" % kyoVersion,
 
     // --- Logging ---
-    "ch.qos.logback" % "logback-classic" % "1.5.13",
+    "ch.qos.logback" % "logback-classic" % "1.6.5",
 
     // --- Test ---
-    "org.scalameta" %% "munit" % "1.0.2" % Test
+    "org.scalameta" %% "munit" % "1.3.6" % Test
   ),
   testFrameworks += munitFramework,
 
@@ -72,7 +75,7 @@ lazy val core = (project in file("core"))
   .settings(baseSettings)
   .settings(name := "marola-core")
 
-val OpenTelemetryVersion = "1.65.0"
+val OpenTelemetryVersion = "1.66.0"
 
 val PdfboxVersion = "3.0.8"
 
@@ -105,7 +108,11 @@ lazy val cli = (project in file("cli"))
     nativeImageInstalled := true,
     nativeImageOutput := target.value / "marola",
     // --- MCP (agent tool wiring — see agent/SwimConditionsMcpServer.scala) ---
-    libraryDependencies += "io.modelcontextprotocol.sdk" % "mcp" % "2.0.0",
+    libraryDependencies ++= Seq(
+      "io.modelcontextprotocol.sdk" % "mcp" % "2.0.1",
+      // MIP-0077: replaces the SDK above once its task lands; pulls kyo-jsonrpc.
+      "io.getkyo" %% "kyo-mcp" % kyoVersion
+    ),
     assembly / mainClass := Some("marola.Main"),
     // SwimConditionsMcpServer has a `main` too; unpinned, `sbt run` prompts and hangs in batch mode.
     Compile / run / mainClass := Some("marola.Main"),
@@ -123,12 +130,36 @@ lazy val cli = (project in file("cli"))
     Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
   )
 
+// MIP-0083: the forecast experiment. A sibling of `cli`, not part of it: nothing on the
+// recommendation path reads it, and its scheduled job is built from this project alone.
+lazy val experiment = (project in file("experiment"))
+  .dependsOn(core, local)
+  .settings(baseSettings)
+  .settings(
+    name := "marola-experiment",
+    Compile / mainClass := Some("marola.experiment.Main"),
+    assembly / mainClass := Some("marola.experiment.Main"),
+    assembly / assemblyOutputPath := target.value / "marola-experiment.jar",
+    Compile / run / fork := true,
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value,
+    Compile / run / javaOptions ++=
+      Seq("--sun-misc-unsafe-memory-access=allow", "--enable-native-access=ALL-UNNAMED"),
+    libraryDependencies ++= Seq(
+      "io.getkyo" %% "kyo-schema"      % kyoVersion,
+      "io.getkyo" %% "kyo-schema-json" % kyoVersion,
+      "io.getkyo" %% "kyo-config"      % kyoVersion,
+      // The lake's engine (MIP-0083 §5.6, MIP-0075 §4.5); `ducklake` is a DuckDB extension it
+      // downloads on first LOAD, not a jar.
+      "org.duckdb" % "duckdb_jdbc" % "1.5.6.0"
+    )
+  )
+
 // An sbt task so CI's sbt-only gate (the devkit's scala-ci) can fetch before `test`.
 lazy val corpusFetch =
   taskKey[Unit]("scripts/corpus-fetch.sh: corpus.version's release into .tmp/knowledge")
 
 lazy val root = (project in file("."))
-  .aggregate(core, local, cli)
+  .aggregate(core, local, cli, experiment)
   .settings(
     name := "marola",
     publish / skip := true,

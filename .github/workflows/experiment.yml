@@ -1,0 +1,87 @@
+name: experiment (the forecast benchmark cycle)
+
+# MIP-0083 §5.9: one cycle every 4 hours, off minute 0. Until the B2 lake lands, the lake and
+# mlflow.db live in the Actions cache: evicted after 7 days unused, so v0's record is not durable.
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# MIP-0075's group: one writer for the lake and MLflow's file.
+concurrency:
+  group: oods-lake
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      STATE: .tmp/experiment
+      MAROLA_EXPERIMENT_FLAGS_LAKE: .tmp/experiment/lake
+      MAROLA_EXPERIMENT_FLAGS_OUT: .tmp/experiment/out
+      MAROLA_EXPERIMENT_FLAGS_MLFLOWURI: http://127.0.0.1:5000
+      INMET_TOKEN: ${{ secrets.INMET_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      MLFLOW_S3_ENDPOINT_URL: ${{ vars.B2_S3_ENDPOINT }}
+      B2_BUCKET: ${{ vars.B2_BUCKET }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - run: sbt experiment/assembly
+
+      # A cache key cannot be overwritten, so each run saves its own and the next restores the
+      # newest by prefix.
+      - uses: actions/cache/restore@v6
+        with:
+          path: .tmp/experiment
+          key: experiment-state-${{ github.run_id }}
+          restore-keys: experiment-state-
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Start MLflow
+        run: |
+          mkdir -p "$STATE"
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$B2_BUCKET" ] && [ -n "$MLFLOW_S3_ENDPOINT_URL" ]; then
+            pip install mlflow==3.16.0 boto3
+            artifacts="s3://$B2_BUCKET/mlflow"
+          else
+            pip install mlflow==3.16.0
+            artifacts="$STATE/mlartifacts"
+            echo "::notice::No B2 key: MLflow artifacts stay in the Actions cache ($artifacts)"
+          fi
+          nohup mlflow server --host 127.0.0.1 --port 5000 \
+            --backend-store-uri "sqlite:///$STATE/mlflow.db" \
+            --artifacts-destination "$artifacts" > "$RUNNER_TEMP/mlflow.log" 2>&1 &
+          for _ in $(seq 60); do curl -fs http://127.0.0.1:5000/health && exit 0; sleep 2; done
+          cat "$RUNNER_TEMP/mlflow.log"; exit 1
+
+      - name: Cycle
+        run: java -jar experiment/target/marola-experiment.jar cycle
+
+      - if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/experiment
+          key: experiment-state-${{ github.run_id }}
+
+      # The export reaches site-data only once a point is scored (§5.8); until then, the run's
+      # files are kept here.
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: experiment-${{ github.run_id }}
+          path: .tmp/experiment/out
+          retention-days: 14
