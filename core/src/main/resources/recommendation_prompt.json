@@ -3,31 +3,6 @@
   "train": [],
   "demos": [
     {
-      "augmented": true,
-      "beach_name": "Arpoador",
-      "hour_local": "Sat 5 Sep, 07:00",
-      "sea_temp_c": "24.1",
-      "wind_kmh": "6",
-      "wave_height_m": "0.4",
-      "jellyfish_risk": "Low",
-      "whale_sighting_likelihood": "High",
-      "score": "92",
-      "summary": "6am at Arpoador looks lovely for a swim: calm seas, warm water, and even potential whale sightings to spot from the safety of the shallows."
-    },
-    {
-      "augmented": true,
-      "beach_name": "Praia Vermelha",
-      "hour_local": "Sat 5 Sep, 15:00",
-      "sea_temp_c": "26.8",
-      "wind_kmh": "9",
-      "wave_height_m": "0.3",
-      "jellyfish_risk": "High",
-      "whale_sighting_likelihood": "Low",
-      "score": "55",
-      "summary": "Be cautious: water is warm but the high jellyfish risk makes this a less than ideal time for a swim."
-    },
-    {
-      "augmented": true,
       "beach_name": "Praia do Leme",
       "hour_local": "Sat 5 Sep, 18:00",
       "sea_temp_c": "21.5",
@@ -36,7 +11,29 @@
       "jellyfish_risk": "Low",
       "whale_sighting_likelihood": "Low",
       "score": "20",
-      "summary": "Given the high wind speed and larger wave height, it's a tough call for swimming. Might want to check conditions again tomorrow evening."
+      "summary": "Skip this one — strong wind and rough 1.8m seas by 6pm make for a genuinely tough, choppy swim."
+    },
+    {
+      "beach_name": "Praia Vermelha",
+      "hour_local": "Sat 5 Sep, 15:00",
+      "sea_temp_c": "26.8",
+      "wind_kmh": "9",
+      "wave_height_m": "0.3",
+      "jellyfish_risk": "High",
+      "whale_sighting_likelihood": "Low",
+      "score": "55",
+      "summary": "Water looks calm and warm, but that same calm is exactly what tends to bring jellyfish in — worth a visual check from the sand before wading in."
+    },
+    {
+      "beach_name": "Arpoador",
+      "hour_local": "Sat 5 Sep, 07:00",
+      "sea_temp_c": "24.1",
+      "wind_kmh": "6",
+      "wave_height_m": "0.4",
+      "jellyfish_risk": "Low",
+      "whale_sighting_likelihood": "High",
+      "score": "92",
+      "summary": "Great pick — calm, warm water and light wind at 7am, with low jellyfish risk. Conditions are also calm enough that you've got a real shot at spotting a whale this time of year. One of the best windows tomorrow."
     }
   ],
   "signature": {
@@ -83,8 +80,8 @@
   "lm": null,
   "metadata": {
     "dependency_versions": {
-      "python": "3.14",
-      "dspy": "3.3.1",
+      "python": "3.12",
+      "dspy": "3.4.1",
       "cloudpickle": "3.1"
     }
   }

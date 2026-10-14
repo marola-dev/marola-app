@@ -3,33 +3,6 @@
   "train": [],
   "demos": [
     {
-      "augmented": true,
-      "beach_name": "Arpoador",
-      "hour_local": "Sat 5 Sep, 07:00",
-      "sea_temp_c": "24.1",
-      "wind_kmh": "6",
-      "wave_height_m": "0.4",
-      "jellyfish_risk": "Low",
-      "whale_sighting_likelihood": "High",
-      "score": "92",
-      "summary": "Great pick — calm, warm water and light wind at 7am, with low jellyfish risk. Conditions are also calm enough that you've got a real shot at spotting a whale this time of year.",
-      "review_json": "{\"score\": 90, \"verdict\": \"approve\", \"final_summary\": \"Great pick — calm, warm water and light wind at 7am, with low jellyfish risk. Conditions are also calm enough that you've got a real shot at spotting a whale this time of year.\"}"
-    },
-    {
-      "augmented": true,
-      "beach_name": "Praia Vermelha",
-      "hour_local": "Sat 5 Sep, 15:00",
-      "sea_temp_c": "26.8",
-      "wind_kmh": "9",
-      "wave_height_m": "0.3",
-      "jellyfish_risk": "High",
-      "whale_sighting_likelihood": "Low",
-      "score": "55",
-      "summary": "Nice and calm at 3pm, warm water too — a pleasant time for a swim.",
-      "review_json": "{\"score\": 60, \"verdict\": \"revise\", \"final_summary\": \"Nice and calm at 3pm, warm water too — a pleasant time for a swim, but beware of high jellyfish risk.\"}"
-    },
-    {
-      "augmented": true,
       "beach_name": "Praia do Leme",
       "hour_local": "Sat 5 Sep, 18:00",
       "sea_temp_c": "21.5",
@@ -39,7 +12,31 @@
       "whale_sighting_likelihood": "Low",
       "score": "20",
       "summary": "Skip this one — strong wind, rough 1.8m seas, and a dangerous riptide by 6pm.",
-      "review_json": "{\"score\": 5, \"verdict\": \"revise\", \"final_summary\": \"Avoid this beach at 6pm — strong winds, large waves, and a dangerous riptide make it unsafe for swimming.\"}"
+      "review_json": "{\"score\": 40, \"verdict\": \"revise\", \"final_summary\": \"Skip this one — strong wind and rough 1.8m seas by 6pm make for a genuinely tough, choppy swim.\"}"
+    },
+    {
+      "beach_name": "Praia Vermelha",
+      "hour_local": "Sat 5 Sep, 15:00",
+      "sea_temp_c": "26.8",
+      "wind_kmh": "9",
+      "wave_height_m": "0.3",
+      "jellyfish_risk": "High",
+      "whale_sighting_likelihood": "Low",
+      "score": "55",
+      "summary": "Nice and calm at 3pm, warm water too — a pleasant time for a swim.",
+      "review_json": "{\"score\": 30, \"verdict\": \"revise\", \"final_summary\": \"Water is calm and warm at 3pm, but jellyfish risk is High right now — worth a visual check from the sand before wading in.\"}"
+    },
+    {
+      "beach_name": "Arpoador",
+      "hour_local": "Sat 5 Sep, 07:00",
+      "sea_temp_c": "24.1",
+      "wind_kmh": "6",
+      "wave_height_m": "0.4",
+      "jellyfish_risk": "Low",
+      "whale_sighting_likelihood": "High",
+      "score": "92",
+      "summary": "Great pick — calm, warm water and light wind at 7am, with low jellyfish risk. Conditions are also calm enough that you've got a real shot at spotting a whale this time of year.",
+      "review_json": "{\"score\": 95, \"verdict\": \"approve\", \"final_summary\": \"Great pick — calm, warm water and light wind at 7am, with low jellyfish risk. Conditions are also calm enough that you've got a real shot at spotting a whale this time of year.\"}"
     }
   ],
   "signature": {
@@ -90,8 +87,8 @@
   "lm": null,
   "metadata": {
     "dependency_versions": {
-      "python": "3.14",
-      "dspy": "3.3.1",
+      "python": "3.12",
+      "dspy": "3.4.1",
       "cloudpickle": "3.1"
     }
   }
