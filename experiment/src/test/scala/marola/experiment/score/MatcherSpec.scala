@@ -57,6 +57,20 @@ class MatcherSpec extends munit.FunSuite:
     )
   }
 
+  test("predictions_keep_unmatched_forecasts_blank") {
+    val predicted = Matcher.predictions(
+      Chunk(forecast("P1", 12, 5.0), forecast("P1", 18, 6.0)),
+      Chunk(obs("I1", at(12), 4.0)),
+      points,
+      instruments,
+      k = 16
+    )
+    assertEquals(
+      predicted.map(p => (p.instrument, p.validTime, p.observed)).toSet,
+      Set[(String, Instant, Option[Double])](("I1", at(12), Some(4.0)), ("I1", at(18), None))
+    )
+  }
+
   test("metar_outside_10_min_is_missing") {
     val matched = run(
       Chunk(forecast("M", 6, 5.0), forecast("M", 12, 6.0), forecast("M", 18, 7.0)),

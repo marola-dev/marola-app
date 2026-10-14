@@ -6,7 +6,7 @@ import java.time.{Instant, LocalDate, ZoneOffset}
 import kyo.*
 
 import marola.experiment.schema.*
-import marola.experiment.score.{Monoid, Score}
+import marola.experiment.score.{Monoid, Prediction, Score}
 import marola.log.Log
 
 /** MIP-0083 §5.8: the scorecard marola-site reads, written only once a point is `scored`. */
@@ -76,6 +76,32 @@ object Export:
       yield ScorecardRow(provider, v, day, s.n, s.bias, s.rmse, s.crps, s.n < p.minN)
       Scorecard(p.version, now, p.windowDays, Chunk.from(rows), Licences)
     }
+
+  val PredictionsFile = "predictions.csv"
+
+  /**
+   * One row per forecast; `forecast` is the members' mean, `observed` and `error` blank if
+   * unmatched.
+   */
+  def predictionsCsv(rows: Chunk[Prediction]): String =
+    val header =
+      "valid_time,point,instrument,variable,provider,run_init,lead_h,forecast,members,observed,error"
+    (header +: rows.map { p =>
+      val forecast = p.members.sum / p.members.size
+      Seq(
+        p.validTime,
+        p.point,
+        p.instrument,
+        p.variable.label,
+        p.provider,
+        p.runInit,
+        p.leadH,
+        forecast,
+        p.members.size,
+        p.observed.getOrElse(""),
+        p.observed.fold("")(o => (forecast - o).toString)
+      ).mkString(",")
+    }).mkString("", "\n", "\n")
 
   /** `export.json` under `out`, or a logged reason and `None`. */
   def write(now: Instant)(using Frame): Option[Path] < (Sync & Env[Deps]) =

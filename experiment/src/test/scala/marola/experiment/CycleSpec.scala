@@ -137,6 +137,27 @@ class CycleSpec extends munit.FunSuite:
     assertEquals(rescored, logged)
   }
 
+  test("predictions_csv_joins_forecasts_with_observations") {
+    val (csv, cells) = cycle(Replay(recorded*))((s, r) =>
+      (
+        Files.readString(s.deps.out.resolve(Export.PredictionsFile)).linesIterator.toList,
+        r.scores.cells
+      )
+    )
+    assertEquals(
+      csv.head,
+      "valid_time,point,instrument,variable,provider,run_init,lead_h,forecast,members,observed,error"
+    )
+    val rows = csv.tail.map(_.split(",", -1).toList)
+    assert(rows.exists(_(9).isEmpty), "a forecast with no observation is kept, blank")
+    // Every matched row is one the scorer counted.
+    assertEquals(rows.count(_(9).nonEmpty).toLong, cells.filter(_.bin == "all").map(_.n).sum)
+    val ifs = rows
+      .find(r => r(4) == "ifs" && r(0) == "2026-10-10T12:00:00Z" && r(3) == "wind_speed_10m")
+      .get
+    assertEquals((ifs(6), ifs(9), ifs(10).toDouble), ("24", "4.0", 1.52 - 4.0))
+  }
+
   test("export_skipped_until_a_point_is_scored") {
     val skipped = cycle(Replay(recorded*))((_, r) => r.exported)
     assertEquals(skipped, None)
