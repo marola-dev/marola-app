@@ -9,7 +9,7 @@
       "source": {
         "source": "github",
         "repo": "marola-dev/marola-devkit",
-        "ref": "v0.8.3"
+        "ref": "v0.10.0"
       }
     }
   },
@@ -51,8 +51,7 @@
       "Bash(javap*)",
       "Bash(jar tf*)",
       "Bash(unzip -l*)",
-      "Bash(command -v *)",
-      "Bash(cost-split *)"
+      "Bash(command -v *)"
     ],
     "deny": [
       "Read(.env)",
