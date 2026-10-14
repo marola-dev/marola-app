@@ -238,8 +238,8 @@ image is not tied to tags; every qualifying `main` push publishes it.
 | Secret | Used by | For |
 |---|---|---|
 | `GITHUB_TOKEN` | `docker.yml`, `docker-smoke.yml`, `release.yml`, `ci.yml`'s `api-docs` job | pushing and pulling the image, attaching release assets, pushing the `api-docs` branch |
-| `MAROLA_CROSS_REPO_PAT` (org secret) | `ci.yml`, `docker-smoke.yml`, `notify-umbrella.yml` | pushing `coverage/` and `smoke/` to marola-site's `site-data` and dispatching its rebuild; dispatching the umbrella's pointer-sync and docs build |
-| `PR_BOT_KEY` (secret), `PR_BOT_APP_ID` (variable) | `scala-steward.yml` | marola-pr-bot's key and App id; the job mints a one-hour token to open dependency PRs, which start CI (MIP-0086) |
+| `MAROLA_CROSS_REPO_PAT` (org secret) | `notify-umbrella.yml` | dispatching the umbrella's pointer-sync and docs build |
+| `PR_BOT_KEY` (secret), `PR_BOT_APP_ID` (variable) | `scala-steward.yml`, `ci.yml`, `docker-smoke.yml` | marola-pr-bot's key and App id; the jobs mint a short-lived token to open dependency PRs, which start CI, and to push `coverage/` and `smoke/` to marola-site's `site-data` and dispatch its rebuild (MIP-0086) |
 
 Locally, secrets go in the gitignored `.env`, never in code: direnv's `.envrc` and compose's
 `env_file` load it, `nix develop` does not. `.env.example` holds placeholders only

@@ -70,5 +70,5 @@ the last good fetch; samples older than 45 days still read "no data".
 | `MAROLA_CORPUS_URL` | `scripts/corpus-fetch.sh` | The marola-corpus release base URL (default `https://github.com/marola-dev/marola-corpus/releases/download`); its self-test points it at `file://` fixtures |
 | `MAROLA_E2E_SKIP_LLM` | `E2ESpec` | Set to anything, `just e2e` skips its LLM test |
 
-CI also uses the `MAROLA_CROSS_REPO_PAT` secret, which no code reads. `MAROLA_LLM_PROVIDER`, which
+CI also uses the `PR_BOT_KEY` secret and, for `notify-umbrella.yml`, the `MAROLA_CROSS_REPO_PAT` secret; no code reads either. `MAROLA_LLM_PROVIDER`, which
 older notes mention, is read nowhere.
