@@ -107,13 +107,20 @@ jobs:
           docker run --rm --network host -e MAROLA_LOCAL_LLM_MODEL="$MODEL" "$IMAGE" "$@" 2>&1 | tee smoke-stdout.txt || code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
 
+      - id: bot
+        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.10.1
+        with:
+          app-id: ${{ vars.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_KEY }}
+          repositories: marola-site
+          permission-contents: write
       - name: Check out marola-site's site-data branch
         uses: actions/checkout@v7
         with:
           repository: marola-dev/marola-site
           ref: site-data
           path: site-data
-          token: ${{ secrets.MAROLA_CROSS_REPO_PAT }}
+          token: ${{ steps.bot.outputs.token }}
 
       - name: Record the run (smoke/latest.json, history.json, runs/<id>.json)
         run: |
@@ -135,15 +142,13 @@ jobs:
       - name: Push to site-data
         run: |
           cd site-data
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -q -m "smoke: run ${{ github.run_id }} ($MODEL, $IMAGE)"
           ../scripts/site-data-push.sh .
 
       - name: Rebuild the map so the panel refreshes
         env:
-          GH_TOKEN: ${{ secrets.MAROLA_CROSS_REPO_PAT }}
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
         run: gh api repos/marola-dev/marola-site/dispatches -f event_type=site-data-updated || echo "could not dispatch to marola-site — its next scheduled build (≤ 3 h) will pick the run up"
 
       - name: Fail the job if the run was not ok
