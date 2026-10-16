@@ -159,8 +159,8 @@ final case class AppConfig(
       case FacilitiesProvider.Off      => NoopAccessibilityClient()
 
   /**
-   * Local-only RAG (`FUTURE-WORK.md` §9.1, first cut): the corpus under `knowledgeDir`, embedded by
-   * the same Ollama server as the LLM, indexed on disk.
+   * Local-only RAG (MIP-0001): the corpus under `knowledgeDir`, embedded by the same Ollama server
+   * as the LLM, indexed on disk.
    */
   def knowledgeStore: FileKnowledgeStore =
     FileKnowledgeStore(

@@ -4,8 +4,7 @@ import kyo.*
 
 /**
  * Where a benchmark/prompt-compile run's params, metrics and artifacts go — the experiment-tracking
- * counterpart to `LlmClient`/`SightingStore`'s local-vs-provisioned split (`ARCHITECTURE.md` §5,
- * MIP-0010).
+ * counterpart to `LlmClient`/`SightingStore`'s local-vs-provisioned split (MIP-0010).
  */
 trait RunLedger:
   def start(experiment: String, name: String, params: Map[String, String]): RunLedger.RunHandle <
