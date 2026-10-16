@@ -28,7 +28,7 @@ enforces.
   it as a parameter with a real default.
 - Kyo effects (`Sync`, `Abort`, `Env`) leaking into pure scoring/decision logic (e.g.
   `Swimability`); Kyo belongs at the I/O boundary only.
-- A commit or PR body carrying attribution text other than the `Tested:`, `Cost:` and
+- A commit or PR body carrying attribution text other than the `Tested:` and
   `Co-Authored-By: Claude` trailers.
 
 ## Context
