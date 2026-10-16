@@ -4,6 +4,7 @@ import java.nio.file.{Files, Path as JPath}
 
 import kyo.*
 
+import marola.MarolaException
 import marola.http.Http
 import marola.json.JsonValue
 import marola.log.Log
@@ -52,6 +53,14 @@ object BeachFinder:
    */
   private val OverpassRetries = 2
 
+  /**
+   * HTTP 200 with a `runtime error` remark: Overpass hit its budget and the elements are partial.
+   */
+  final case class OverpassIncomplete(endpoint: String, remark: String)
+      extends Exception
+      with MarolaException:
+    def message = s"$endpoint answered with a partial result: $remark"
+
   def nearby(
       origin: Coordinates,
       radiusKm: Double = 15.0,
@@ -76,7 +85,9 @@ object BeachFinder:
          |out center $MaxOverpassElements;""".stripMargin
 
     fromSnapshot(snapshots, origin, radiusKm, limit) match
-      case Some(cached) => cached
+      case Some(cached) =>
+        log.info(s"beaches: ${cached.size} near $origin from the snapshot")
+        cached
       case None =>
         queryOverpass(query, Endpoints)
           .map { body =>
@@ -91,6 +102,7 @@ object BeachFinder:
               .take(limit)
           }
           .map { beaches =>
+            log.info(s"beaches: ${beaches.size} near $origin from Overpass")
             if beaches.nonEmpty then
               snapshots.foreach(d =>
                 BeachSnapshot.write(BeachSnapshot.fileFor(d, origin, radiusKm, limit), beaches)
@@ -123,7 +135,13 @@ object BeachFinder:
   /** Each mirror in turn; the last failure propagates so a total outage is still an error. */
   private def queryOverpass(query: String, endpoints: List[String]): String < Sync =
     def post(endpoint: String) =
-      Http.postForm(endpoint, Map("data" -> query), HttpTimeoutSeconds, retries = OverpassRetries)
+      Http
+        .postForm(endpoint, Map("data" -> query), HttpTimeoutSeconds, retries = OverpassRetries)
+        .map { body =>
+          JsonValue.parse(body)("remark").str match
+            case Some(r) if r.contains("runtime error") => throw OverpassIncomplete(endpoint, r)
+            case _                                      => body
+        }
     endpoints match
       case Nil             => throw new IllegalStateException("no Overpass endpoint configured")
       case endpoint :: Nil => post(endpoint)
