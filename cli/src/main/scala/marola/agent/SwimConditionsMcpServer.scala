@@ -1,12 +1,20 @@
 package marola.agent
 
+import java.time.{LocalDate, ZoneId}
+
 import kyo.*
 
 import marola.beaches.BeachFinder
 import marola.json.JsonValue
 import marola.knowledge.OceanQa
 import marola.model.{Beach, BestHour, Coordinates}
-import marola.water.{BathingCondition, SamplingPoint, WaterQuality, WaterQualityMatcher}
+import marola.water.{
+  BathingCondition,
+  SamplingPoint,
+  WaterQuality,
+  WaterQualityClient,
+  WaterQualityMatcher
+}
 import marola.{AppConfig, Recommender}
 
 import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper
@@ -181,12 +189,26 @@ object SwimConditionsMcpServer:
     val json = JsonValue.arr(beaches.map(beachToJson)*).render
     McpSchema.CallToolResult.builder().addTextContent(json).build()
 
+  private[agent] def recommendationsFor(
+      origin: Coordinates,
+      radiusKm: Double,
+      waterQuality: Option[WaterQualityClient],
+      today: ZoneId => LocalDate = LocalDate.now(_)
+  ): List[BestHour] < Sync =
+    Recommender.bestPerBeachTomorrow(
+      origin,
+      radiusKm,
+      waterQuality = waterQuality,
+      today = today
+    )
+
   private def recommendationHandler(
       exchange: McpSyncServerExchange,
       request: McpSchema.CallToolRequest
   ): McpSchema.CallToolResult =
     val (origin, radiusKm) = originAndRadius(request.arguments())
-    val results = runSync(Recommender.bestPerBeachTomorrow(origin, radiusKm))
+    val config = AppConfig.fromEnv
+    val results = runSync(recommendationsFor(origin, radiusKm, config.waterQualityClient(origin)))
     val json = JsonValue.arr(results.map(bestHourToJson)*).render
     McpSchema.CallToolResult.builder().addTextContent(json).build()
 
