@@ -8,7 +8,7 @@ final case class ChatMessage(role: String, content: String)
 
 /**
  * One backend for "turn a `BestHour` into a natural-language summary" (see `Recommender`'s query
- * synthesis step, `ARCHITECTURE.md` §5).
+ * synthesis step, `docs/1-design_integrations.md` "Query synthesis").
  */
 trait LlmClient:
   def complete(messages: List[ChatMessage]): String < Sync

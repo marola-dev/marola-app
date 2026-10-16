@@ -23,7 +23,7 @@ import marola.trails.{Trail, TrailFinder}
 object Main extends KyoApp:
 
   // Arpoador, Rio de Janeiro — a real marola swim spot, used as the default "current location"
-  // until location comes from the Telegram bot's native location-sharing (see ARCHITECTURE.md).
+  // until location comes from the Telegram bot's native location-sharing.
   private val DefaultOrigin = Coordinates(lat = -22.9878, lon = -43.1913)
 
   /**
@@ -139,9 +139,9 @@ object Main extends KyoApp:
       case (None, None, None)                                  => runRecommendation(args, config)
 
   /**
-   * `--ask "<question>"` — local RAG over the Markdown corpus in `knowledge/` (MIP-0001 /
-   * `FUTURE-WORK.md` §9.1): retrieve with the Ollama embedder, answer with the local LLM from those
-   * passages only, print the passages' sources.
+   * `--ask "<question>"` — local RAG over the Markdown corpus in `knowledge/` (MIP-0001): retrieve
+   * with the Ollama embedder, answer with the local LLM from those passages only, print the
+   * passages' sources.
    */
   private def askOcean(config: AppConfig, question: String): Unit < Async =
     for
@@ -455,8 +455,8 @@ object Main extends KyoApp:
     )
 
   /**
-   * Generates the draft summary, then hands it to `Reviewer` (`ARCHITECTURE.md` §5a,
-   * `FUTURE-WORK.md` §4.2) for a second, independent pass before printing anything to the user.
+   * Generates the draft summary, then hands it to `Reviewer` (`docs/1-design_integrations.md`
+   * "Query synthesis") for a second, independent pass before printing anything to the user.
    */
   private def summarizeTop(
       config: AppConfig,

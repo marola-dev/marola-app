@@ -5,7 +5,8 @@ import marola.json.JsonValue
 /**
  * Loads a DSPy-compiled prompt artifact (`dspy/compile_recommendation_prompt.py` produces two:
  * `recommendation_prompt.json` for the summarizer, `review_prompt.json` for `Reviewer` — see
- * `ARCHITECTURE.md` §5a) and turns it into a plain chat message list any `LlmClient` can replay.
+ * `docs/1-design_integrations.md` "Query synthesis") and turns it into a plain chat message list
+ * any `LlmClient` can replay.
  */
 final case class CompiledPrompt(
     instructions: String,
