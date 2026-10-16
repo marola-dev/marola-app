@@ -46,7 +46,7 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 | Direction | Contract |
 |---|---|
 | corpus → app | `corpus.version` pins a marola-corpus tag; `scripts/corpus-fetch.sh` (`just corpus-fetch`, sbt's `corpusFetch`) unpacks it into `.tmp/knowledge`, which tests, `just ask` and the image read. A corpus checkout overrides it: `MAROLA_KNOWLEDGE_DIR=<corpus>/knowledge` |
-| app → site | `ghcr.io/marola-dev/marola-app:jvm-<sha>` (`docker.yml`, pushed from `main`), which marola-site pins by digest and runs with `--site --areas …`: board data only, against the `board.schema.json` the jar ships |
+| app → site | `ghcr.io/marola-dev/marola-app:jvm-<sha>` (`ci.yml`'s `jvm` job, pushed from `main`), which marola-site pins by digest and runs with `--site --areas …`: board data only, against the `board.schema.json` the jar ships |
 | app → site `site-data` | `coverage/` (`ci.yml` on `main`) and `smoke/` (`docker-smoke.yml`), pushed as marola-pr-bot (`PR_BOT_APP_ID` / `PR_BOT_KEY`, MIP-0086) |
 | app → ml | the same image (`--benchmark`) and `ml-resources-<tag>.tar.gz` on each `v*` release (`release.yml`, `scripts/build-resources-tarball.sh`) |
 | ml → app | the compiled-prompt JSON, as a bot PR into `core/src/main/resources/` |
