@@ -117,8 +117,7 @@ object Main:
       ) ++ (nino match
         case Result.Success(Some(w)) =>
           Map("nino34_anomaly_c" -> w.anomalyC.toString, "nino34_week" -> w.week.toString)
-        case _ => Map.empty
-      )
+        case _ => Map.empty)
     )
 
   // The last RescoredDays days, so late reports reach the days a cycle scores again.

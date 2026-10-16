@@ -78,7 +78,7 @@ lazy val core = (project in file("core"))
   .settings(baseSettings)
   .settings(name := "marola-core")
 
-val OpenTelemetryVersion = "1.66.0"
+val OpenTelemetryVersion = "1.67.0"
 
 val PdfboxVersion = "3.0.8"
 
