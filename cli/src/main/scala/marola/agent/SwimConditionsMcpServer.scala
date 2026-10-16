@@ -6,7 +6,8 @@ import kyo.*
 
 import marola.beaches.BeachFinder
 import marola.json.JsonValue
-import marola.knowledge.OceanQa
+import marola.knowledge.{KnowledgeStore, OceanQa}
+import marola.llm.LlmClient
 import marola.model.{Beach, BestHour, Coordinates}
 import marola.water.{
   BathingCondition,
@@ -248,23 +249,41 @@ object SwimConditionsMcpServer:
   ): McpSchema.CallToolResult =
     val question = Option(request.arguments().get("question")).map(_.toString).getOrElse("")
     val config = AppConfig.fromEnv
-    val answer = runSync(OceanQa.answer(question, config.knowledgeStore, config.llmClient))
-    val json = JsonValue.obj(
-      "answer" -> JsonValue.str(
-        marola.knowledge.SafetyFooter.append(answer.text, answer.safety)
-      ),
-      "safety" -> JsonValue.bool(answer.safety),
-      "sources" -> JsonValue.arr(
-        answer.passages.map(p =>
-          JsonValue.obj(
-            "title" -> JsonValue.str(p.docTitle),
-            "source" -> JsonValue.str(p.source),
-            "score" -> JsonValue.num(p.score)
-          )
-        )*
+    val json = runSync(
+      askResponse(
+        question,
+        config.knowledgeStore,
+        config.llmClient,
+        config.askFallback,
+        config.askMinScore
       )
     )
     McpSchema.CallToolResult.builder().addTextContent(json.render).build()
+
+  private[agent] def askResponse(
+      question: String,
+      store: KnowledgeStore,
+      llm: LlmClient,
+      fallback: OceanQa.Fallback,
+      minScore: Double
+  ): JsonValue < Sync =
+    OceanQa.answer(question, store, llm, fallback = fallback, minScore = minScore).map { answer =>
+      JsonValue.obj(
+        "answer" -> JsonValue.str(
+          marola.knowledge.SafetyFooter.append(answer.text, answer.safety)
+        ),
+        "safety" -> JsonValue.bool(answer.safety),
+        "sources" -> JsonValue.arr(
+          answer.passages.map(p =>
+            JsonValue.obj(
+              "title" -> JsonValue.str(p.docTitle),
+              "source" -> JsonValue.str(p.source),
+              "score" -> JsonValue.num(p.score)
+            )
+          )*
+        )
+      )
+    }
 
   def main(args: Array[String]): Unit =
     val jsonMapper = JacksonMcpJsonMapper(JsonMapper.builder().build())
