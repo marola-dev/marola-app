@@ -38,6 +38,7 @@ the ones worth fixing regardless of how much of the rest gets migrated to richer
 | `observability/Tracing`, `MlflowTracing` | `< Sync` | `withSpan` is honest about being `< Sync`; `MlflowTracing` ends a span with `ERROR` and rethrows when the wrapped effect fails ([Integrations](1-design_integrations.md#observability)) |
 | `AppConfig.fromEnv` | **Hidden effect ⚠️** | See §2 — the single most consequential finding here |
 | `agent/SwimConditionsMcpServer` | Unsafe boundary (contained) | See §3 |
+| `Recommender`'s `today` clock | Hidden effect ⚠️ (minor) | The one hidden effect in `Recommender`: `bestHoursTomorrow`, `bestPerBeachTomorrow` and `scoreDays` take `today: ZoneId => LocalDate`, injected so tests can pin the date, but its default `LocalDate.now(_)` reads the system clock for any caller that omits it (`Main` and the MCP server do; `SiteBuilder` passes its own) |
 | `Recommender.traverse`/`traverseSingle`, `Main.printLines` | Pure control flow over `< Sync` values | Hand-rolled recursion, not stack-safe for very large lists — a non-issue at marola's actual list sizes (a handful of beaches), worth knowing if that ever changes |
 
 ## 2. The real finding: `AppConfig.fromEnv` is a hidden effect
