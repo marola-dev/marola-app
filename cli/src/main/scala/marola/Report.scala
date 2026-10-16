@@ -148,8 +148,7 @@ object Report:
       case marola.model.JellyfishRisk.Moderate =>
         "some warm-calm signals present; worth a look from the sand"
       case marola.model.JellyfishRisk.High =>
-        "warm, calm, weak current — check the shoreline before wading in"
-    )
+        "warm, calm, weak current — check the shoreline before wading in")
 
     val whales =
       val peak = best.whalePeak

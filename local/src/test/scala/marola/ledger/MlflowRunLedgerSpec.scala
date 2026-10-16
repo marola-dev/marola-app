@@ -56,8 +56,7 @@ class MlflowRunLedgerSpec extends munit.FunSuite:
             item.get(bytes)
             sb.append(new String(bytes, UTF_8))
           def onError(t: Throwable): Unit = latch.countDown()
-          def onComplete(): Unit = latch.countDown()
-        )
+          def onComplete(): Unit = latch.countDown())
       latch.await()
       sb.toString
 
