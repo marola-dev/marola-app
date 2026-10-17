@@ -201,6 +201,7 @@ together.
 | [`marola-e2e.yml`](../.github/workflows/marola-e2e.yml) | dispatch | `E2ESpec` live (above) |
 | [`release.yml`](../.github/workflows/release.yml) | `v*` tag | The release asset (below) |
 | [`notify-umbrella.yml`](../.github/workflows/notify-umbrella.yml) | push to `main` | Dispatches `submodule-updated` to the umbrella's pointer-sync, and `submodule-docs-updated` (docs rebuild) when `README.md` or `docs/**` changed; without the token, a notice and the umbrella's daily cron |
+| [`bump-ready.yml`](../.github/workflows/bump-ready.yml) | `CI` completed on a `chore/devkit-v*` branch | Devkit `notify-devkit`: sends `bump-ready` so the devkit's `bump-merge` runs within minutes; without the token, a notice and the devkit's hourly run |
 | [`pr.yml`](../.github/workflows/pr.yml) | PR events | Devkit `pr-body` fills the description from the commits; devkit `ci-short-circuit` cancels a closed, unmerged PR's runs |
 | [`scala-steward.yml`](../.github/workflows/scala-steward.yml) | Mondays 12:00 UTC; dispatch | One PR per newer Scala dependency or sbt plugin |
 | [`labels.yml`](../.github/workflows/labels.yml) | dispatch | Devkit `labels-sync`: the org's label manifest; `just labels-sync` does the same locally |
@@ -237,7 +238,7 @@ image is not tied to tags; every qualifying `main` push publishes it.
 | Secret | Used by | For |
 |---|---|---|
 | `GITHUB_TOKEN` | `ci.yml`'s image jobs, `docker-smoke.yml`, `release.yml`, `ci.yml`'s `api-docs` job | pushing and pulling the image, attaching release assets, pushing the `api-docs` branch |
-| `PR_BOT_KEY` (secret), `PR_BOT_APP_ID` (variable) | `scala-steward.yml`, `ci.yml`, `docker-smoke.yml`, `notify-umbrella.yml` | marola-pr-bot's key and App id; each job mints a short-lived token: to open dependency PRs, which start CI; to push `coverage/` and `smoke/` to marola-site's `site-data` and dispatch its rebuild; and to dispatch the umbrella (MIP-0086) |
+| `PR_BOT_KEY` (secret), `PR_BOT_APP_ID` (variable) | `scala-steward.yml`, `ci.yml`, `docker-smoke.yml`, `notify-umbrella.yml`, `bump-ready.yml` | marola-pr-bot's key and App id; each job mints a short-lived token: to open dependency PRs, which start CI; to push `coverage/` and `smoke/` to marola-site's `site-data` and dispatch its rebuild; to dispatch the umbrella, and to dispatch the devkit (MIP-0086) |
 
 Locally, secrets go in the gitignored `.env`, never in code: direnv's `.envrc` and compose's
 `env_file` load it, `nix develop` does not. `.env.example` holds placeholders only

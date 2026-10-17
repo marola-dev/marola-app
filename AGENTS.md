@@ -51,6 +51,7 @@ entirely locally with a free Ollama model. One sbt multi-project build (`build.s
 | app → ml | the same image (`--benchmark`) and `ml-resources-<tag>.tar.gz` on each `v*` release (`release.yml`, `scripts/build-resources-tarball.sh`) |
 | ml → app | the compiled-prompt JSON, as a bot PR into `core/src/main/resources/` |
 | app → umbrella | `README.md` + `docs/` (`notify-umbrella.yml`); Scaladoc (`just api-docs`) on the `api-docs` branch from every `main` push (`ci.yml`'s `api-docs` job) |
+| app → devkit | `bump-ready` when a devkit bump PR's CI ends green (`bump-ready.yml`) |
 
 No repo reads another's tree, and this repo's CI never builds a consumer (MIP-0070 §5.4).
 
