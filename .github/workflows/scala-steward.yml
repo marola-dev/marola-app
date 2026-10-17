@@ -31,7 +31,7 @@ jobs:
       # A token, not the App key: a compromised Steward release then holds a credential for an hour.
       - name: marola-pr-bot token
         id: bot
-        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.14.0
+        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.15.1
         with:
           app-id: ${{ vars.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_KEY }}
