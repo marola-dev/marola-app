@@ -143,7 +143,7 @@ object Swimability:
    */
   def waterVerdict(water: Option[WaterQuality], today: LocalDate): WaterVerdict =
     water match
-      case None => WaterVerdict.NoData
+      case None    => WaterVerdict.NoData
       case Some(w) =>
         val fresh = w.fresh(today)
         if fresh.isEmpty then

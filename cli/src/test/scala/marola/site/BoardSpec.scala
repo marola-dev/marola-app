@@ -418,7 +418,7 @@ object SchemaCheck:
       case Some(ref) if ref.startsWith("#/$defs/") =>
         check(root, root("$defs")(ref.stripPrefix("#/$defs/")), value, path)
       case Some(ref) => List(s"$path: unsupported $$ref $ref")
-      case None =>
+      case None      =>
         val actual = typeName(value)
         val types = schema("type") match
           case JsonValue.JString(t) => List(t)

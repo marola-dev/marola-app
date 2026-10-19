@@ -79,7 +79,7 @@ object Http:
         case Right(response) if attempt < retries && RetryableStatuses.contains(response.status) =>
           Thread.sleep(backoffFor(backoffMs, attempt))
           loop(attempt + 1)
-        case Right(response) => response
+        case Right(response)              => response
         case Left(_) if attempt < retries =>
           Thread.sleep(backoffFor(backoffMs, attempt))
           loop(attempt + 1)

@@ -35,7 +35,7 @@ object Tides:
     candidates
       .foldLeft(List.empty[TideEvent]) { (kept, c) =>
         kept match
-          case Nil => List(c)
+          case Nil                                     => List(c)
           case last :: rest if last.isHigh == c.isHigh =>
             val moreExtreme =
               if c.isHigh then c.heightM > last.heightM else c.heightM < last.heightM

@@ -23,7 +23,7 @@ final class FallbackWaterQualityClient(primary: WaterQualityClient, backup: Wate
   def samplingPoints: List[SamplingPoint] < Sync =
     Abort.run(Abort.catching[Throwable](primary.samplingPoints)).map {
       case Result.Success(points) if points.nonEmpty => points
-      case Result.Success(_) =>
+      case Result.Success(_)                         =>
         FallbackWaterQualityClient.log.warn(
           s"${primary.name}: primary source returned nothing — trying ${backup.getClass.getSimpleName}"
         )

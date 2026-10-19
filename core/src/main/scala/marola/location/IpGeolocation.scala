@@ -77,7 +77,7 @@ object IpGeolocation:
       providers: List[Provider]
   ): List[(String, Coordinates, Option[String])] < Sync =
     providers match
-      case Nil => Nil
+      case Nil              => Nil
       case provider :: rest =>
         for
           outcome <- Abort.run(

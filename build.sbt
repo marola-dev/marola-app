@@ -6,7 +6,7 @@
 // forecast benchmark, MIP-0083; ADR-0002).
 
 ThisBuild / scalaVersion := "3.9.0"
-ThisBuild / version      := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.marola"
 
 // scalafix's semantic rules (RemoveUnused, OrganizeImports) need SemanticDB.
@@ -36,8 +36,8 @@ lazy val baseSettings = Seq(
 
   libraryDependencies ++= Seq(
     // --- Effects ---
-    "io.getkyo" %% "kyo-core"        % kyoVersion,
-    "io.getkyo" %% "kyo-direct"      % kyoVersion, // direct-style (.now / defer) syntax
+    "io.getkyo" %% "kyo-core" % kyoVersion,
+    "io.getkyo" %% "kyo-direct" % kyoVersion, // direct-style (.now / defer) syntax
     "io.getkyo" %% "kyo-combinators" % kyoVersion,
     // MIP-0077: not used yet; kyo-schema-json pulls kyo-schema.
     "io.getkyo" %% "kyo-schema-json" % kyoVersion,
@@ -70,7 +70,7 @@ lazy val baseSettings = Seq(
     // there. Paths are per artifact, so nothing collides; `first` is only for a duplicate jar.
     case PathList("META-INF", "native-image", xs @ _*) => MergeStrategy.first
     case PathList("META-INF", xs @ _*)                 => MergeStrategy.discard
-    case _                                         => MergeStrategy.first
+    case _                                             => MergeStrategy.first
   }
 )
 
@@ -148,9 +148,9 @@ lazy val experiment = (project in file("experiment"))
     Compile / run / javaOptions ++=
       Seq("--sun-misc-unsafe-memory-access=allow", "--enable-native-access=ALL-UNNAMED"),
     libraryDependencies ++= Seq(
-      "io.getkyo" %% "kyo-schema"      % kyoVersion,
+      "io.getkyo" %% "kyo-schema" % kyoVersion,
       "io.getkyo" %% "kyo-schema-json" % kyoVersion,
-      "io.getkyo" %% "kyo-config"      % kyoVersion,
+      "io.getkyo" %% "kyo-config" % kyoVersion,
       // The lake's engine (MIP-0083 §5.6, MIP-0075 §4.5); `ducklake` is a DuckDB extension it
       // downloads on first LOAD, not a jar.
       "org.duckdb" % "duckdb_jdbc" % "1.5.6.0"
