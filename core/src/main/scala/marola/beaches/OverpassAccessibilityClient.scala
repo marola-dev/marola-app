@@ -113,7 +113,7 @@ object OverpassAccessibilityClient:
       case Some("toilets")   => Some(Facility.Toilets)
       case Some("shower")    => Some(Facility.Shower)
       case Some("lifeguard") => Some(Facility.Lifeguard)
-      case _ =>
+      case _                 =>
         tags("emergency").str match
           case Some("lifeguard") | Some("lifeguard_base") => Some(Facility.Lifeguard)
           case _                                          => None

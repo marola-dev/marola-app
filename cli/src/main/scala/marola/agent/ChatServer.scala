@@ -32,7 +32,7 @@ object ChatServer:
   def responseFor(question: String, store: KnowledgeStore, llm: Option[LlmClient]): JsonValue <
     Sync =
     llm match
-      case None => Sync.defer(JsonValue.obj("error" -> JsonValue.str("no LLM configured")))
+      case None         => Sync.defer(JsonValue.obj("error" -> JsonValue.str("no LLM configured")))
       case Some(client) =>
         OceanQa.answer(question, store, client).map { answer =>
           JsonValue.obj(
@@ -88,7 +88,7 @@ object ChatServer:
       else
         val rawBody = new String(exchange.getRequestBody.readAllBytes(), "UTF-8")
         Try(JsonValue.parse(rawBody)("question").str).toOption.flatten match
-          case None => writeJson(exchange, 400, """{"error":"missing question"}""")
+          case None           => writeJson(exchange, 400, """{"error":"missing question"}""")
           case Some(question) =>
             Try(
               Sync.Unsafe.evalOrThrow(
@@ -100,7 +100,7 @@ object ChatServer:
               )
             ) match
               case scala.util.Success(Result.Success(json)) => writeJson(exchange, 200, json.render)
-              case scala.util.Success(failure) =>
+              case scala.util.Success(failure)              =>
                 writeJson(
                   exchange,
                   500,

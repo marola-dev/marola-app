@@ -63,7 +63,7 @@ object OpenMeteoFixtures:
       sent += java.lang.System.nanoTime() -> url
       routes.indexWhere(_._1(url)) match
         case -1 => Http.Response(404, s"no fixture for $url")
-        case i =>
+        case i  =>
           val n = served.getOrElse(i, 0)
           served(i) = n + 1
           val responses = routes(i)._2

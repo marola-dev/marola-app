@@ -49,7 +49,7 @@ final class IneaRjWaterQualityClient(
   ): List[SamplingPoint] < Sync =
     Abort.run(Abort.catching[Throwable](points)).map {
       case Result.Success(ps) => ps
-      case other =>
+      case other              =>
         log.warn(s"INEA: $what failed ($other) — no points from it")
         Nil
     }

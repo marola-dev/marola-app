@@ -56,7 +56,7 @@ final case class Note(code: NoteCode, args: Map[String, JsonValue] = Map.empty) 
       case NoteCode.JellyfishElevated => "elevated jellyfish likelihood"
       case NoteCode.JellyfishSome     => "some jellyfish likelihood"
       case NoteCode.WaterStale        => s"water quality data stale (${day("sampled_on")})"
-      case NoteCode.WaterUnfit =>
+      case NoteCode.WaterUnfit        =>
         val count = args
           .get("enterococci_per_100ml")
           .flatMap(_.num)

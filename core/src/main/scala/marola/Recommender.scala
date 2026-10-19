@@ -43,7 +43,7 @@ object Recommender:
       beaches: List[Beach]
   ): Map[String, WaterQuality] < Sync =
     client match
-      case None => Map.empty[String, WaterQuality]
+      case None    => Map.empty[String, WaterQuality]
       case Some(c) =>
         Abort.run(Abort.catching[Throwable](c.samplingPoints)).map {
           case Result.Success(points) =>
@@ -79,7 +79,7 @@ object Recommender:
       beaches: List[Beach]
   ): Map[String, Facilities] < Sync =
     client match
-      case None => Map.empty[String, Facilities]
+      case None    => Map.empty[String, Facilities]
       case Some(c) =>
         Abort.run(Abort.catching[Throwable](c.near(beaches))).map {
           case Result.Success(byBeach) => byBeach
@@ -204,7 +204,7 @@ object Recommender:
   // Hand-rolled from `map`/`flatMap` only: Kyo's own combinators aren't verified against the pinned RC.
   private def traverse[A, B](items: List[A])(f: A => B < Sync): List[B] < Sync =
     items match
-      case Nil => Nil
+      case Nil          => Nil
       case head :: tail =>
         for
           b <- f(head)

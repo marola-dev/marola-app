@@ -176,7 +176,7 @@ object JsonValue:
             case 'n'  => sb.append('\n')
             case 'r'  => sb.append('\r')
             case 't'  => sb.append('\t')
-            case 'u' =>
+            case 'u'  =>
               if i + 4 > s.length then fail("truncated unicode escape")
               val hex = s.substring(i, i + 4)
               i += 4

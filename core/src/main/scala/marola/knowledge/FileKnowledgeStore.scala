@@ -61,7 +61,7 @@ final class FileKnowledgeStore(corpusDir: String, indexPath: String, embedder: E
   private def buildIfMissing(existing: Option[List[Indexed]], fp: String): List[Indexed] < Sync =
     existing match
       case Some(idx) => idx
-      case None =>
+      case None      =>
         for
           chunks <- Corpus.load(Paths.get(corpusDir))
           indexed <- embedAll(chunks)
@@ -75,7 +75,7 @@ final class FileKnowledgeStore(corpusDir: String, indexPath: String, embedder: E
 
   private def batches(groups: List[List[CorpusChunk]]): List[Indexed] < Sync =
     groups match
-      case Nil => Nil
+      case Nil           => Nil
       case group :: rest =>
         for
           vectors <- embedder.embed(group.map(_.text))

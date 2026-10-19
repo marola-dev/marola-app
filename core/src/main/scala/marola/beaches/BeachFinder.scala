@@ -77,7 +77,7 @@ object BeachFinder:
 
     fromSnapshot(snapshots, origin, radiusKm, limit) match
       case Some(cached) => cached
-      case None =>
+      case None         =>
         queryOverpass(query, Endpoints)
           .map { body =>
             val elements = JsonValue.parse(body)("elements").arr
@@ -125,14 +125,14 @@ object BeachFinder:
     def post(endpoint: String) =
       Http.postForm(endpoint, Map("data" -> query), HttpTimeoutSeconds, retries = OverpassRetries)
     endpoints match
-      case Nil             => throw new IllegalStateException("no Overpass endpoint configured")
-      case endpoint :: Nil => post(endpoint)
+      case Nil              => throw new IllegalStateException("no Overpass endpoint configured")
+      case endpoint :: Nil  => post(endpoint)
       case endpoint :: rest =>
         Abort
           .run(Abort.catching[Throwable](post(endpoint)))
           .map {
             case Result.Success(body) => body
-            case other =>
+            case other                =>
               log.warn(s"beaches: $endpoint failed ($other) — trying ${rest.head}")
               queryOverpass(query, rest)
           }

@@ -86,7 +86,7 @@ object Report:
       s"Top pick — ${best.beach.name}, ${h.time.format(hourFormat)}-${h.time.plusHours(1).format(timeFormat)}"
 
     val water = best.waterQuality match
-      case None => List(s"no data — ${Swimability.waterVerdict(None, today).summary}")
+      case None     => List(s"no data — ${Swimability.waterVerdict(None, today).summary}")
       case Some(wq) =>
         val verdict = Swimability.waterVerdict(best.waterQuality, today)
         val points = wq.latestSamples.sortBy { case (p, _) => p.pointName }.map {
@@ -144,7 +144,7 @@ object Report:
       s"$t, $w$wd$uv$rain"
 
     val jelly = s"${best.jellyfishRisk} — " + (best.jellyfishRisk match
-      case marola.model.JellyfishRisk.Low => "few of the warm-calm signals present"
+      case marola.model.JellyfishRisk.Low      => "few of the warm-calm signals present"
       case marola.model.JellyfishRisk.Moderate =>
         "some warm-calm signals present; worth a look from the sand"
       case marola.model.JellyfishRisk.High =>
