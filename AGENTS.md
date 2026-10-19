@@ -80,6 +80,11 @@ and `just prepush`.
 JDK/Kyo-versioning detail and the jar-verification approach (`.claude/agents/jar-verifier.md`) for
 Kyo's pre-1.0 API surface.
 
+Where something lives across repos: `python3 .claude/skills/routing/scripts/route.py query
+"<identifiers>"`, or `route.py wiring <term>` for what produces, pins or reads an artifact or a
+dispatch. It is the vendored `routing` skill, which reads the umbrella's CI-built bundle with no
+Nix (MIP-0084); a known keyword is `git grep`.
+
 ## Releases
 
 A `v*` tag (a human's act: `git tag` and `gh release` are denied in `.claude/settings.json`) runs
