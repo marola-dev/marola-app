@@ -108,7 +108,7 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
 
       - id: bot
-        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.20.2
+        uses: marola-dev/marola-devkit/.github/actions/bot-token@v0.20.3
         with:
           app-id: ${{ vars.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_KEY }}
