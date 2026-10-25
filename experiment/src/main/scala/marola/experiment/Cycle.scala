@@ -7,8 +7,9 @@ import kyo.*
 
 import marola.experiment.forecast.{FetchError, ForecastSource}
 import marola.experiment.schema.*
-import marola.experiment.score.{Matcher, Scorer}
+import marola.experiment.score.{Matcher, Prediction, Scorer}
 import marola.ledger.RunLedger
+import marola.log.Log
 
 /** What a cycle reads and writes, provided through `Env` so a test swaps in fixtures (§5.13). */
 final case class Deps(
@@ -43,6 +44,8 @@ object Cycle:
   /** Late observations and backfilled runs change the last days, so they are scored again. */
   val RescoredDays = 3
 
+  private val logger = Log.forName(getClass.getName)
+
   def experiment(p: Protocol): String = s"forecast-benchmark-v${p.version}"
 
   def run(using Frame): Report < (Async & Env[Deps]) =
@@ -68,6 +71,12 @@ object Cycle:
           scores <- rescore(from, today.plusDays(1))
           _ <- d.store.writeScoreCells(scores.cells)
           _ <- d.store.writePairCells(scores.pairs)
+          predicted <- predictions(from, today.plusDays(1))
+          _ <- Sync.defer {
+            Files.createDirectories(d.out)
+            Files
+              .writeString(d.out.resolve(Export.PredictionsFile), Export.predictionsCsv(predicted))
+          }
           failures = fetched.collect { case (id, Result.Failure(e)) => s"$id: ${e.reason}" } ++
             fetched.collect { case (id, Result.Panic(e)) => s"$id: $e" } ++
             Chunk.from(observed.failure.orElse(observed.panic).map(e => s"observations: $e")) ++
@@ -75,34 +84,69 @@ object Cycle:
               .filter(_.state == RunState.Missing)
               .map(r => s"${r.provider} ${r.runInit}: ${r.reason.getOrElse("missing")}")
           report <- log(d, now, runs, scores, failures)
+          _ <- Sync.defer(
+            logger.info(
+              s"cycle stored ${runs.size} runs (${runs.count(_.state == RunState.Sampled)} sampled, " +
+                s"${runs.count(_.state == RunState.Backfilled)} backfilled, " +
+                s"${runs.count(_.state == RunState.Missing)} missing), " +
+                s"${collected.map(_.samples.size).sum} forecast values, " +
+                s"${observed.getOrElse(Chunk.empty).size} observations; " +
+                s"${predicted.size} predictions at ground-truth points, " +
+                s"${predicted.count(_.observed.nonEmpty)} with an observation"
+            )
+          )
         yield report
       )
 
   /** Every score of `[from, until)` rebuilt from the lake's samples alone, one day at a time. */
   def rescore(from: LocalDate, until: LocalDate)(using Frame): Scores < (Sync & Env[Deps]) =
     Env.get[Deps].map { d =>
-      val instruments = d.groundTruth.points.map(instrument).to(Chunk)
       val providers = d.sources.map(_.provider.id).sorted
+      perDay(from, until)(Matcher.pairs).map { days =>
+        val cells = days.map(Scorer.cells)
+        val pairs = days.map(matched =>
+          for
+            a <- providers
+            b <- providers if a < b
+            cell <- Scorer.pairCells(a, b, matched)
+          yield cell
+        )
+        sorted(Scores(cells.flatten, pairs.flatten))
+      }
+    }
+
+  /** Every forecast of `[from, until)` at a ground-truth point, beside its observation if any. */
+  def predictions(from: LocalDate, until: LocalDate)(using
+      Frame
+  ): Chunk[Prediction] < (Sync & Env[Deps]) =
+    perDay(from, until)(Matcher.predictions).map(
+      _.flatten.sortBy(p => (p.validTime, p.point, p.variable.label, p.provider, p.leadH))
+    )
+
+  private def perDay[A](from: LocalDate, until: LocalDate)(
+      f: (
+          Chunk[ForecastSample],
+          Chunk[ObservationSample],
+          Chunk[SamplingPoint],
+          Chunk[Instrument],
+          Int
+      ) => A
+  )(using
+      Frame
+  ): Chunk[A] < (Sync & Env[Deps]) =
+    Env.get[Deps].map { d =>
+      val instruments = d.groundTruth.points.map(instrument).to(Chunk)
       d.store.points.map(points =>
-        Kyo
-          .foreach(Chunk.from(Iterator.iterate(from)(_.plusDays(1)).takeWhile(_.isBefore(until))))(
-            day =>
-              val start = day.atStartOfDay(ZoneOffset.UTC).toInstant
-              val end = start.plus(JDuration.ofDays(1))
-              val margin = JDuration.ofSeconds(Matcher.MetarToleranceS)
-              for
-                fs <- d.store.forecasts(start, end).run
-                os <- d.store.observations(start.minus(margin), end.plus(margin)).run
-              yield
-                val matched = Matcher.pairs(fs, os, points, instruments, d.protocol.ensembleK)
-                val pairs = for
-                  a <- providers
-                  b <- providers if a < b
-                  cell <- Scorer.pairCells(a, b, matched)
-                yield cell
-                Scores(Scorer.cells(matched), pairs)
-          )
-          .map(days => sorted(Scores(days.flatMap(_.cells), days.flatMap(_.pairs))))
+        Kyo.foreach(Chunk.from(Iterator.iterate(from)(_.plusDays(1)).takeWhile(_.isBefore(until))))(
+          day =>
+            val start = day.atStartOfDay(ZoneOffset.UTC).toInstant
+            val end = start.plus(JDuration.ofDays(1))
+            val margin = JDuration.ofSeconds(Matcher.MetarToleranceS)
+            for
+              fs <- d.store.forecasts(start, end).run
+              os <- d.store.observations(start.minus(margin), end.plus(margin)).run
+            yield f(fs, os, points, instruments, d.protocol.ensembleK)
+        )
       )
     }
 
