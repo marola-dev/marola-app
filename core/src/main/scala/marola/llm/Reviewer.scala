@@ -5,8 +5,8 @@ import kyo.*
 import marola.json.JsonValue
 
 /**
- * The reviewer/critic pass (`FUTURE-WORK.md` §4.2, now built rather than just proposed): replays a
- * second DSPy-compiled artifact (`review_prompt.json`, compiled from
+ * The reviewer/critic pass (`docs/1-design_integrations.md` "Query synthesis"): replays a second
+ * DSPy-compiled artifact (`review_prompt.json`, compiled from
  * `dspy/compile_recommendation_prompt.py`'s `ReviewSwimSummary` signature) against the summarizer's
  * own draft output, before either reaches a user.
  */

@@ -24,10 +24,10 @@ import io.modelcontextprotocol.spec.McpSchema
 import tools.jackson.databind.json.JsonMapper
 
 /**
- * Exposes marola's own pipeline (`BeachFinder`, `Recommender`) as MCP tools — the "MCP
- * tool-calling" item from `ARCHITECTURE.md` §5b: instead of `Recommender` hardcoding the call order
- * (BeachFinder → OpenMeteoClient → Swimability), an agent (Claude Desktop locally, or any other MCP
- * client) can decide when/how to call these tools itself.
+ * Exposes marola's own pipeline (`BeachFinder`, `Recommender`) as MCP tools — see
+ * `docs/1-design_integrations.md` "Agentic tool access": instead of `Recommender` hardcoding the
+ * call order (BeachFinder → OpenMeteoClient → Swimability), an agent (Claude Desktop locally, or
+ * any other MCP client) can decide when/how to call these tools itself.
  */
 object SwimConditionsMcpServer:
 

@@ -18,7 +18,7 @@ final case class Passage(
 
 /**
  * Retrieval over marola's curated marine-knowledge corpus (the Markdown files under `knowledge/`) —
- * the RAG half of `FUTURE-WORK.md` §9.1, local-first.
+ * `docs/1-design_integrations.md` "Ocean knowledge: retrieval", local-first.
  */
 trait KnowledgeStore:
   def search(query: String, k: Int = 4): List[Passage] < Sync
