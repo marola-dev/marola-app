@@ -196,7 +196,7 @@ failing on all three mirrors, or Open-Meteo failing, fails the run. Where the or
 
 marola runs AI in two places that answer to different rules. The split decides what may be wrong
 and how you would find out. A third, forecasting with time-series models, is designed but not
-built ([Architecture](https://docs.marola.dev/2-Building-marola/ARCHITECTURE/)).
+built ([Architecture: Use 3](https://docs.marola.dev/2-Building-marola/ARCHITECTURE/#use-3-planned-forecasting-with-time-series-foundation-models)).
 
 **The map is deterministic: no model writes any number a visitor sees.**
 [`SiteBuilder`](../cli/src/main/scala/marola/site/SiteBuilder.scala) has no LLM reference. Every

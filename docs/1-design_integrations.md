@@ -223,7 +223,7 @@ clients' one per region: OSM's coverage is global.
 Grounded Q&A over [marola-corpus](https://github.com/marola-dev/marola-corpus)'s Markdown documents
 at the release `corpus.version` pins (`.tmp/knowledge` locally, `/app/knowledge` in the image).
 How the corpus reaches this repo and marola-ml is the umbrella's
-[Architecture](https://docs.marola.dev/2-Building-marola/ARCHITECTURE/); this is the in-app half.
+[REPOS: the contracts](https://docs.marola.dev/2-Building-marola/REPOS/#the-contracts); this is the in-app half.
 
 - [`Corpus`](../core/src/main/scala/marola/knowledge/Corpus.scala) reads every `.md` directly
   under the directory and under its `safety/`, and merges paragraphs into chunks of at most 700
