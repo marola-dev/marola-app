@@ -34,7 +34,7 @@ final class ImaScPdfWaterQualityClient(
       index <- Http.getString(indexUrl)
       bulletin <- latestBulletinUrl(index) match
         case Some(url) => Http.getBytes(url, timeoutSeconds = 60).map(Some(_))
-        case None =>
+        case None      =>
           log.warn(s"no bulletin link found at $indexUrl — the portal's index may have changed")
           Sync.defer(None)
       pointsJson <- Http.postForm(pointsUrl, Map.empty, timeoutSeconds = 30)

@@ -74,7 +74,7 @@ object OceanQa:
 
   private def unanswered(llm: LlmClient, question: String, fallback: Fallback): String < Sync =
     fallback match
-      case Fallback.Strict => NoPassagesReply
+      case Fallback.Strict  => NoPassagesReply
       case Fallback.General =>
         llm.complete(generalMessages(question)).map(GeneralKnowledgeLabel + _)
 

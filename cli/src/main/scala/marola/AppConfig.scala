@@ -140,7 +140,7 @@ final case class AppConfig(
       case WaterProvider.InemaBa => Some(InemaBaWaterQualityClient())
       case WaterProvider.IneaRj  => Some(IneaRjWaterQualityClient())
       case WaterProvider.None    => scala.None
-      case WaterProvider.Auto =>
+      case WaterProvider.Auto    =>
         if ImaScWaterQualityClient.coversOrigin(origin) then Some(ImaScWaterQualityClient())
         else if InemaBaWaterQualityClient.coversOrigin(origin) then
           Some(InemaBaWaterQualityClient())

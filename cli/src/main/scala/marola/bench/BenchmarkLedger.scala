@@ -84,7 +84,7 @@ object BenchmarkLedger:
             )
             outcome <- rest match
               case Result.Success(_) => Sync.defer(Some(run))
-              case _ =>
+              case _                 =>
                 Abort.run(Abort.catching[Throwable](ledger.end(run, ok = false))).map(_ => None)
           yield outcome
         case _ => Sync.defer(None)

@@ -278,7 +278,7 @@ object Main extends KyoApp:
       reportPath: java.nio.file.Path
   ): Unit < Async =
     config.mlflowTrackingUri match
-      case None => Sync.defer(())
+      case None      => Sync.defer(())
       case Some(uri) =>
         val context = BenchmarkLedger.Context(
           model = config.localLlmModel,
@@ -363,7 +363,7 @@ object Main extends KyoApp:
       outcome <- Abort.run(Abort.catching[Throwable](config.tracing))
       tracing <- outcome match
         case Result.Success(t) => Sync.defer(t)
-        case failure =>
+        case failure           =>
           Console
             .printLine(
               s"(traces disabled: MAROLA_TRACES=${config.tracesBackend} but the backend is unreachable: $failure)"
@@ -464,7 +464,7 @@ object Main extends KyoApp:
       top: Option[BestHour]
   ): Unit < Async =
     top match
-      case None => Console.printLine("(nothing to summarize — no results)")
+      case None       => Console.printLine("(nothing to summarize — no results)")
       case Some(best) =>
         val client = config.tracedLlmClient(tracing)
         val factInputs = factInputsFor(best)
@@ -478,7 +478,7 @@ object Main extends KyoApp:
           })
           _ <- draftOutcome match
             case Result.Success(draft) => reviewAndPrint(client, factInputs, draft)
-            case failure =>
+            case failure               =>
               Console.printLine(s"(LLM call failed, showing numbers above only: $failure)")
         yield ()
 
