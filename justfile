@@ -49,6 +49,7 @@ quality-other:
     python3 scripts/ocr-post.py --self-test
     python3 scripts/strip_external_scripts.py --self-test
     scripts/corpus-fetch.sh --self-test
+    scripts/sbt-quote.sh --self-test
     scripts/site-data-push.sh --self-test
     scripts/build-resources-tarball.sh --self-test
     actionlint
@@ -83,8 +84,9 @@ prepush:
     fi
 
 # Run marola's CLI (build.sbt's `cli` project).
+[positional-arguments]
 run *args: corpus-fetch
-    mkdir -p "$XDG_RUNTIME_DIR" && MAROLA_KNOWLEDGE_DIR="{{ knowledge }}" sbt "cli/run {{ args }}"
+    mkdir -p "$XDG_RUNTIME_DIR" && MAROLA_KNOWLEDGE_DIR="{{ knowledge }}" sbt "cli/run $(scripts/sbt-quote.sh "$@")"
 
 # Run marola's MCP tool server, a separate main class from `run`'s (build.sbt). stdout is the
 # JSON-RPC channel: corpus-fetch reports on stderr, and sbt runs with -error.
@@ -99,8 +101,9 @@ corpus-fetch:
     scripts/corpus-fetch.sh
 
 # Ask the corpus a question: local RAG, Ollama embeds and answers. MIP-0001.
+[positional-arguments]
 ask question: corpus-fetch
-    mkdir -p "$XDG_RUNTIME_DIR" && MAROLA_KNOWLEDGE_DIR="{{ knowledge }}" sbt "cli/run -- --ask \"{{ question }}\""
+    mkdir -p "$XDG_RUNTIME_DIR" && MAROLA_KNOWLEDGE_DIR="{{ knowledge }}" sbt "cli/run -- --ask $(scripts/sbt-quote.sh "$1")"
 
 # Force a re-embed of the corpus (normally automatic when a file or the embed model changes).
 knowledge-index: corpus-fetch
