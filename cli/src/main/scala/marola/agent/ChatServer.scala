@@ -29,24 +29,30 @@ object ChatServer:
    * the HTTP plumbing (and out of `AppConfig`) so it's unit-testable with a fake `LlmClient`/
    * `KnowledgeStore`, no real config or server needed.
    */
-  def responseFor(question: String, store: KnowledgeStore, llm: Option[LlmClient]): JsonValue <
-    Sync =
+  def responseFor(
+      question: String,
+      store: KnowledgeStore,
+      llm: Option[LlmClient],
+      fallback: OceanQa.Fallback,
+      minScore: Double
+  ): JsonValue < Sync =
     llm match
       case None => Sync.defer(JsonValue.obj("error" -> JsonValue.str("no LLM configured")))
       case Some(client) =>
-        OceanQa.answer(question, store, client).map { answer =>
-          JsonValue.obj(
-            "answer" -> JsonValue.str(SafetyFooter.append(answer.text, answer.safety)),
-            "safety" -> JsonValue.bool(answer.safety),
-            "sources" -> JsonValue.arr(
-              answer.passages.map(p =>
-                JsonValue.obj(
-                  "title" -> JsonValue.str(p.docTitle),
-                  "source" -> JsonValue.str(p.source)
-                )
-              )*
+        OceanQa.answer(question, store, client, fallback = fallback, minScore = minScore).map {
+          answer =>
+            JsonValue.obj(
+              "answer" -> JsonValue.str(SafetyFooter.append(answer.text, answer.safety)),
+              "safety" -> JsonValue.bool(answer.safety),
+              "sources" -> JsonValue.arr(
+                answer.passages.map(p =>
+                  JsonValue.obj(
+                    "title" -> JsonValue.str(p.docTitle),
+                    "source" -> JsonValue.str(p.source)
+                  )
+                )*
+              )
             )
-          )
         }
 
   /** Starts the server; the caller owns its lifecycle (`.stop(0)`). */
@@ -94,7 +100,13 @@ object ChatServer:
               Sync.Unsafe.evalOrThrow(
                 Abort.run(
                   Abort.catching[Throwable](
-                    responseFor(question, config.knowledgeStore, Some(config.llmClient))
+                    responseFor(
+                      question,
+                      config.knowledgeStore,
+                      Some(config.llmClient),
+                      config.askFallback,
+                      config.askMinScore
+                    )
                   )
                 )
               )
