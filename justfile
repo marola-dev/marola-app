@@ -2,8 +2,9 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 set allow-duplicate-recipes
 
 # sbt's launcher needs a writable XDG_RUNTIME_DIR to create its boot server socket
-# (sbt.internal.BootServerSocket).
-export XDG_RUNTIME_DIR := justfile_directory() + "/.tmp/sbt-runtime"
+# (sbt.internal.BootServerSocket). Outside the checkout: under a long checkout path the socket
+# overflows the 108-byte unix socket limit (#46); quality-other checks the bound.
+export XDG_RUNTIME_DIR := cache_directory() + "/marola-sbt"
 
 # Where the app's recipes read the corpus: the release `corpus-fetch` unpacks, unless overridden
 # (a corpus checkout, e.g. MAROLA_KNOWLEDGE_DIR=../marola-corpus/knowledge). Not exported:
@@ -42,6 +43,8 @@ quality-other:
     set -euo pipefail
     for tool in ruff shellcheck actionlint hadolint agents-check docs-lint; do command -v "$tool" >/dev/null || { echo "quality-other: $tool not installed — run inside 'nix develop'" >&2; exit 1; }; done
     just --list >/dev/null
+    # sbt appends /.sbt/sbt-socket<up to 20 chars>/sbt-load.sock (50 bytes); the limit is 107 + NUL.
+    (( ${#XDG_RUNTIME_DIR} <= 57 )) || { echo "XDG_RUNTIME_DIR too long for sbt's boot socket: $XDG_RUNTIME_DIR" >&2; exit 1; }
     ruff check .
     ruff format --check .
     shellcheck --severity=error scripts/*.sh
@@ -146,11 +149,7 @@ api-docs out:
     #!/usr/bin/env bash
     set -euo pipefail
     out="{{ out }}"
-    # sbt's boot socket lives here; under a long checkout path (CI's runner) the justfile's
-    # .tmp/sbt-runtime overflows the unix socket path limit.
-    XDG_RUNTIME_DIR="$(mktemp -d /tmp/sbt.XXXXXX)"
-    export XDG_RUNTIME_DIR
-    trap 'rm -rf "$XDG_RUNTIME_DIR"' EXIT
+    mkdir -p "$XDG_RUNTIME_DIR"
     sbt core/doc local/doc cli/doc
     rm -rf "$out/scala"
     for m in core local cli; do
