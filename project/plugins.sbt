@@ -12,7 +12,7 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.9")
 // The native-image arguments and reachability metadata live in cli/src/main/resources/META-INF/
 // native-image/com.marola/marola-cli/, read from the classpath, so the Dockerfile's
 // `native-image -jar marola.jar` builds the same binary.
-addSbtPlugin("org.scalameta" % "sbt-native-image" % "0.5.0")
+addSbtPlugin("org.scalameta" % "sbt-native-image" % "0.7.0")
 
 // `sbt coverage test coverageReport coverageAggregate` — statement coverage, published to the
 // site's coverage badge (`just coverage`; see .github/workflows/ci.yml and site.yml). Latest
